@@ -52,6 +52,47 @@ que traz a dependência.
 
 ---
 
+## ADR-002 — CI roda no servidor `cicd`, não nos runners hospedados do GitHub
+
+**Status:** `ACCEPTED` · 28/09/2026
+
+**Contexto.** No primeiro push deste repositório, os dois runs do workflow de
+Release (`36465790740` para a 0.1.0 e `36465902322` para a 0.1.1) falharam em
+4–5 s, sem executar nenhum passo. O GitHub recusou o job: *"The job was not
+started because recent account payments have failed or your spending limit
+needs to be increased"*. Não é deste repositório: o ONLINE, da mesma
+organização, falha igual desde pelo menos 24/09/2026. A cota de minutos
+hospedados da `BLUE3-ISP` está travada. As duas Releases foram publicadas à mão,
+com `./tools/release.sh --backfill`.
+
+A casa já tem a resposta para isso: o servidor `cicd` (`100.64.100.240`), uma
+VM que roda os jobs do GitHub Actions dos repositórios privados em runners
+self-hosted, sem gastar os minutos hospedados. Ele foi montado em 28/09/2026
+para os repositórios do ShvIA, pelo mesmo motivo, e o runbook dele vive em
+[samirhvbr/shvia-web `deploy/servidor-cicd.md`](https://github.com/samirhvbr/shvia-web/blob/master/deploy/servidor-cicd.md).
+
+**Decisão.** Decisão do dono, em 28/09/2026: **este repositório não depende dos
+runners hospedados do GitHub.** Quando precisar de CI, ela roda no `cicd`,
+acessado como `samir` (`ssh samir@100.64.100.240`), num runner self-hosted. O
+caminho está no [runbook.md](runbook.md), §8. **Nada é registrado lá antes de
+haver o que rodar** — hoje não há código nem suíte.
+
+**Consequências.** Enquanto não houver runner, o `.github/workflows/release.yml`
+continua no repositório, como o padrão manda, mas **não roda**: cada push que
+bumpa o `version.md` deixa um run recusado no GitHub. A Release sai à mão: **quem
+bumpa o `version.md` roda `./tools/release.sh` depois do push**, na mesma
+entrega, e confere a Release e o selo `Latest`. É o outro responsável que o
+padrão já prevê ([versioning.md](versioning.md)), e o bump continua sendo um ato
+só com a Release. Quando houver runner, o workflow volta a publicar sozinho pela
+variável `CI_RUNNER`, sem mudar o script.
+
+O endereço do servidor é interno e está escrito num repositório privado. Se o
+repositório for aberto, ele sai da documentação e o runner sai do repositório
+antes: um runner self-hosted num repositório público roda código de qualquer
+fork dentro da rede do escritório (checklist do [runbook.md](runbook.md), §6).
+
+---
+
 <!-- Modelo para as próximas entradas:
 
 ## ADR-NNN — <a decisão, como frase>

@@ -78,7 +78,11 @@ virar a visibilidade:
       continua em todo clone.
 - [ ] Todo segredo que já foi commitado foi **rotacionado**, não só apagado.
 - [ ] Nenhum hostname interno, faixa de IP privada ou caminho de infraestrutura
-      que não deva ser público.
+      que não deva ser público — o endereço do servidor `cicd` (§8) inclusive.
+- [ ] **Nenhum runner do `cicd` registrado neste repositório** (§8). Num
+      repositório público, qualquer pull request de fork roda código numa
+      máquina da rede do escritório. O runner sai **antes** de a visibilidade
+      mudar.
 - [ ] **ADR-001 revisto antes de abrir** — repositório público sem licença é
       juridicamente fechado; decidir a licença, e o `NOTICE` que concorda com
       ela, é o primeiro passo ([decisions.md](decisions.md)).
@@ -110,3 +114,59 @@ python3 -m json.tool .claude/settings.json > /dev/null && echo ok
 
 **Se o `diff` dos gêmeos acusar qualquer coisa além do comentário de
 espelhamento, uma edição foi aplicada num arquivo e não no outro.**
+
+## 8. CI — o servidor `cicd`
+
+**Quando o b3monitor precisar de CI, ela roda no servidor `cicd`, e não nos
+runners hospedados do GitHub** ([ADR-002](decisions.md)).
+
+| | |
+|---|---|
+| Máquina | `cicd` — VM Debian 13 no Proxmox, 8 vCPU, 16 GB de RAM |
+| Endereço | `100.64.100.240` |
+| Acesso | `ssh samir@100.64.100.240` — usuário `samir`, com `sudo` |
+| O que faz | Roda os jobs do GitHub Actions dos repositórios **privados** em runners self-hosted, que não gastam os minutos hospedados da conta |
+| Painel | http://100.64.100.240:8080/ — só na rede do escritório, sem login |
+| Runbook da máquina | [samirhvbr/shvia-web `deploy/servidor-cicd.md`](https://github.com/samirhvbr/shvia-web/blob/master/deploy/servidor-cicd.md) — **a fonte**: o que está instalado, o layout dos discos, os runners, o painel. Não copie aqui |
+
+**Em 28/09/2026 não há runner para este repositório, e nada para ele rodar:**
+não há código nem suíte. Nada foi registrado no servidor. Esta seção existe para
+que, no dia em que houver o que testar, o caminho já esteja escrito.
+
+**Quando precisar**, siga o *Adding a repository* do runbook da máquina, com o
+que muda por este repositório ser de **organização**, e não de conta pessoal:
+
+- **O token de registro.** Para um runner só deste repositório:
+  `gh api -X POST repos/BLUE3-ISP/b3monitor/actions/runners/registration-token -q .token`,
+  e o `--url` do `config.sh` é `https://github.com/BLUE3-ISP/b3monitor`. Na
+  organização existe uma opção que a conta pessoal não tem: um runner **da
+  organização** (`orgs/BLUE3-ISP/actions/runners/registration-token`, `--url`
+  `https://github.com/BLUE3-ISP`), que pode servir a todos os repositórios da
+  `BLUE3-ISP` de uma vez. Qual dos dois usar é decisão desse dia, e vira ADR.
+- **O painel ainda não lê execuções de organização.** Um runner da `BLUE3-ISP`
+  aparece lá com aviso, e as execuções dele ficam de fora dos números.
+- **Os jobs apontam para o servidor pela variável do repositório**, como nos
+  outros: `runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}` no workflow, e
+  `gh variable set CI_RUNNER --body <rótulo-do-runner> -R BLUE3-ISP/b3monitor`
+  liga; `gh variable delete CI_RUNNER -R BLUE3-ISP/b3monitor` devolve os jobs
+  ao GitHub.
+
+**Três regras da máquina que valem aqui do mesmo jeito:**
+
+- 🔴 **Nunca registre esse runner num repositório público.** Qualquer pull
+  request de fork roda código nele, e a máquina fica na rede do escritório. Por
+  isso o checklist da §6 manda retirar o runner antes de abrir este repositório.
+- **O `.env` de todo runner novo fixa `LANG=C.UTF-8` e `LC_ALL=C.UTF-8`**, e
+  apaga a linha `LANG=pt_BR.UTF-8` que o `config.sh` copia da VM, instalada em
+  português. Sem isso, número com vírgula decimal quebra teste que espera ponto
+  — já quebrou cinco no primeiro run do shvia-web.
+- **O token de registro dura uma hora e passa pelo stdin, nunca por arquivo.**
+
+**A máquina não faz deploy.** CD precisaria de chave SSH para produção, e isso
+não existe; o deploy continua sendo comando do dono.
+
+**Até existir um runner, o único job de Actions deste repositório — o
+`.github/workflows/release.yml` — não roda:** nos runners hospedados ele é
+recusado por cobrança antes de começar. A Release é publicada à mão, com
+`./tools/release.sh` depois de todo push que bumpa o `version.md`
+([versioning.md](versioning.md)).

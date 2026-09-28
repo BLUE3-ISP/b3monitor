@@ -174,6 +174,15 @@ primeiro vence e o outro não faz nada:
 Nenhum dos dois jamais *decide* uma versão: os dois copiam o número que o agente
 já escreveu no `version.md`.
 
+**Neste repositório, hoje, só o segundo funciona.** Os runners hospedados do
+GitHub estão bloqueados por cobrança na `BLUE3-ISP`, e o job é recusado antes de
+começar. Também não há runner self-hosted para o b3monitor no servidor `cicd`
+([ADR-002](decisions.md)). Por isso **quem bumpa o `version.md` roda
+`./tools/release.sh` depois do push**, na mesma entrega, e confere com
+`gh release list` que a versão tem Release e selo `Latest`. Quando houver runner
+no `cicd` ([runbook.md](runbook.md), §8), o workflow volta a ser o primeiro
+responsável.
+
 ### `tools/release.sh`
 
 A única implementação que os dois responsáveis chamam — o workflow roda este

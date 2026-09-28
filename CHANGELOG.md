@@ -9,6 +9,34 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.2 - a CI do repositório passa a ter endereço: o servidor cicd, não os runners do GitHub
+
+Os dois runs do workflow de Release no primeiro push, `36465790740` e
+`36465902322`, foram recusados pelo GitHub em 4–5 s, sem executar nenhum passo:
+*"recent account payments have failed or your spending limit needs to be
+increased"*. A cota de minutos hospedados da `BLUE3-ISP` está travada; o ONLINE
+falha igual desde pelo menos 24/09/2026. O dono decidiu, no mesmo dia, que este
+repositório não precisa dos runners hospedados: a casa tem o servidor `cicd`
+(`100.64.100.240`, usuário `samir`), que roda jobs do GitHub Actions de
+repositórios privados em runners self-hosted.
+
+O [ADR-002](docs/decisions.md) registra a decisão. A §8 nova do
+[docs/runbook.md](docs/runbook.md) diz o que é a máquina, como entrar e o que
+muda para registrar o runner de um repositório de **organização** — o token vem
+de `repos/BLUE3-ISP/...` ou de `orgs/BLUE3-ISP/...`, e o painel ainda não lê
+execuções de organização. Também traz as três regras da máquina que valem aqui:
+nunca runner em repositório público, `LANG=C.UTF-8` no `.env` e token pelo
+stdin. O detalhe do servidor não foi copiado: a fonte continua sendo o
+`deploy/servidor-cicd.md` do shvia-web, e a seção linka para lá. **Nenhum runner
+foi registrado**, porque ainda não há código nem suíte para rodar.
+
+Enquanto não houver runner, a Release sai à mão. O `CLAUDE.md`, o `AGENTS.md` e o
+[docs/versioning.md](docs/versioning.md) dizem agora que quem bumpa o
+`version.md` roda `./tools/release.sh` depois do push e confere a Release e o selo
+`Latest`. O `release.yml` continua no repositório, e cada bump deixa um run
+recusado no GitHub. O checklist antes de tornar o repositório público ganhou um
+item: o runner sai antes de a visibilidade mudar.
+
 ## 0.1.1 - a skill loop-work entra vendorizada em .claude/skills
 
 A skill `/loop-work` do skill-LOOP, que faz o agente trabalhar a fila por horas

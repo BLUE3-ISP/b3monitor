@@ -74,6 +74,10 @@ descreve existir, vira documento em `docs/`.
 - **Roda localmente com:** _a preencher._
 - **Testes rodam com:** _a preencher — um comando que qualquer pessoa repete._
 - **Nunca toque:** _a preencher._
+- **CI:** nenhum pipeline ainda. Quando precisar, ela roda no servidor `cicd`
+  (`100.64.100.240`, usuário `samir`), num runner self-hosted — nunca nos
+  runners hospedados do GitHub ([ADR-002](docs/decisions.md),
+  [runbook §8](docs/runbook.md#8-ci--o-servidor-cicd)).
 
 ---
 
@@ -350,6 +354,12 @@ uma GitHub Release publicada.** O `.github/workflows/release.yml` faz isso a
 cada push que toca o `version.md`, chamando o `tools/release.sh`; rode esse
 script à mão para um backfill. Os dois pulam o que já existe.
 
+**Aqui, hoje, o workflow não roda:** os runners hospedados do GitHub estão
+bloqueados por cobrança na `BLUE3-ISP`, e não há runner no `cicd` para este
+repositório ([ADR-002](docs/decisions.md)). **Depois de todo push que bumpa o
+`version.md`, rode `./tools/release.sh`** e confira com `gh release list` — a
+Release e o selo `Latest` são parte da entrega, não um "depois".
+
 **O `version.md` no GitHub é igual às Releases no GitHub.** Seu checkout local
 não entra na conta. Um PR não publica nada; no momento em que ele faz merge, a
 Release vira aquela versão.
@@ -380,6 +390,7 @@ Regras completas: [docs/versioning.md](docs/versioning.md).
 - [ ] **O trabalho está commitado** — e dividido num commit por assunto se
       cobriu mais de um. Nada é relatado como terminado enquanto estiver sem
       commit.
-- [ ] A **tag e a GitHub Release** existem para esta versão. Normalmente o
-      workflow faz isso no push; `./tools/release.sh` se precisar agora.
+- [ ] A **tag e a GitHub Release** existem para esta versão. Aqui é o
+      `./tools/release.sh` depois do push, enquanto o workflow não roda
+      (ADR-002).
 - [ ] Os gêmeos continuam iguais: `diff <(tail -n +2 CLAUDE.md) <(tail -n +2 AGENTS.md)`.
