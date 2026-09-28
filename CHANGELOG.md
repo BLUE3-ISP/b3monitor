@@ -9,6 +9,27 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.1 - a skill loop-work entra vendorizada em .claude/skills
+
+A skill `/loop-work` do skill-LOOP, que faz o agente trabalhar a fila por horas
+sem pedir "continua", passa a viver dentro do repositório: `vendor.sh` do
+skill-LOOP, versão 0.5.4 (commit `cb511e9`), copiou `skill/loop/` para
+`.claude/skills/loop-work/` e os dois modelos de prompt para `.claude/prompts/`,
+sem os quais o hook procura os arquivos três níveis acima e falha em silêncio.
+
+**A cópia é versionada**, e isso diverge dos irmãos: nos repositórios da
+`BLUE3-ISP` que já têm a skill, a cópia está na 0.3.4 e fora do git —
+`.claude/skills/` e `.claude/prompts/` aparecem como untracked no ONLINE, por
+exemplo. Aqui vale a regra da frota: tudo é versionado, e a única exceção é
+segredo.
+
+Nenhum hook foi registrado no repositório. O hook `Stop` é global, instalado pelo
+`install.sh` do skill-LOOP no config dir do Claude Code, e aponta para o upstream;
+ele não faz nada enquanto não houver `.loop/STATE.json`, e a `.loop/` só nasce
+quando alguém arma o loop. Nenhuma permissão foi concedida para o `loop_ctl.py`.
+Conferido: `loop_ctl.py --help` roda a partir da cópia, e nenhuma `.loop/` foi
+criada. O `.claude/README.md` descreve as duas pastas novas.
+
 ## 0.1.0 - a estrutura de documentação do repodocs chega ao repositório, em português
 
 O b3monitor foi criado em 28/09/2026 na `BLUE3-ISP`, privado, com um `README.md`

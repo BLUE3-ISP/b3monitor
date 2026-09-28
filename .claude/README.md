@@ -17,6 +17,18 @@ As regras de conduta do agente estão no [CLAUDE.md](../CLAUDE.md).
 |------|------|
 | `settings.json` | O perfil **ativo**, versionado. Hoje: **nada que escolha o modelo**, `effortLevel: xhigh` (um padrão — `/effort` muda para a sessão), `defaultMode: plan`, deny-list de 5 regras, ask-list de 8 e allow-list de 17 entradas. |
 | `settings.local.json` | Override local da máquina, **no `.gitignore`** — pode guardar caminhos e tokens que pertencem a uma máquina só. Nunca commite. |
+| `skills/loop-work/` | A skill `/loop-work` do [skill-LOOP](https://github.com/samirhvbr/skill-loop), **vendorizada** — um retrato de `skill/loop/` de lá, com a versão e o commit de origem no `VERSION.md` dela. Não edite aqui: mude no upstream e rode de novo o `vendor.sh` de lá, que substitui a pasta inteira. |
+| `prompts/` | `continuacao.md` e `reabastecimento.md`, os modelos que o `hooks/loop-stop.py` procura três níveis acima de si. A cópia da skill fica quebrada sem eles, e em silêncio. Vêm do mesmo `vendor.sh`. |
+
+**A skill loop não registra hook neste repositório.** O hook `Stop` que devolve o
+agente à fila é global, instalado pelo `install.sh` do skill-LOOP no config dir do
+Claude Code, e aponta para o repositório skill-LOOP, não para esta cópia. Ele é
+inerte enquanto não existir `.loop/STATE.json`: a `.loop/` só nasce quando alguém
+arma o loop (`loop_ctl.py armar`), e armar é o opt-in explícito. A cópia daqui é o
+que o agente **lê** (`SKILL.md`, `loop_ctl.py`); depois de um bump no upstream ela
+é a metade velha até o `vendor.sh` rodar de novo. **Nenhuma permissão foi
+concedida para ela:** rodar `python3 .claude/skills/loop-work/loop_ctl.py` pede
+confirmação, como qualquer comando fora do allow-list.
 
 ## O deny-list vence o allow-list — sempre
 
