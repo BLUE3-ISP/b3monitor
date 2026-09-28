@@ -1,0 +1,27 @@
+# Tudo é versionado. A única exceção é um SEGREDO.
+#
+# Motivo (EOP ADR-086, adotado na frota inteira): uma pasta que guarda uma
+# pergunta em aberto ou um veredito é memória, não execução — deixá-la fora do
+# git já causou perda real. Ruído de diff (contadores, timestamps) é decisão de
+# granularidade do commit, não motivo para ignorar um arquivo.
+#
+# `.claude/` e `.continue/` são versionadas DE PROPÓSITO. Não as coloque aqui.
+# Qualquer exceção nova além de segredo exige um ADR em docs/decisions.md, nunca
+# uma linha silenciosa neste arquivo.
+
+# Segredos e credenciais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p8
+*.p12
+*.pfx
+
+# Override local do agente (pode ter caminhos e tokens da máquina)
+.claude/settings.local.json
+
+# Ruído de sistema operacional
+.DS_Store
+Thumbs.db

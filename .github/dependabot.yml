@@ -1,0 +1,19 @@
+# O Dependabot impede que a única superfície de dependência que este
+# repositório tem hoje — as actions do workflow de Release — fique velha.
+#
+# Não há workflow de build aqui, de propósito: o repositório ainda não tem
+# código, e um job de CI não teria nada para provar. Quando a stack chegar, o
+# ecossistema dela entra nesta lista e o workflow de testes vira decisão em
+# docs/decisions.md.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    commit-message:
+      # O formato de commit da frota é `X.Y.Z - descrição em português`, que o
+      # Dependabot não consegue produzir. `prefix` é o mais perto que ele chega;
+      # um PR do Dependabot, portanto, é feito squash à mão com mensagem conforme.
+      prefix: "deps"
+    open-pull-requests-limit: 5
