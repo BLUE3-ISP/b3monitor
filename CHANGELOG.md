@@ -9,6 +9,31 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.4 - o build passa a ter permissão: toolchain mínima e um PostgreSQL de dev isolado
+
+A produção do b3monitor começa pela fatia F0-01, e a stack já está decidida
+(D-01…D-08 do 2.0, aceitas em 29/09/2026): Laravel na central, Go na sonda,
+PostgreSQL 17. Sem permissão, o primeiro `go test` do loop pararia num prompt, e um
+loop de horas sem ninguém no teclado é justamente o caso em que isso não pode
+acontecer. O dono concedeu **só o build**, e cada linha está no `_comment` do
+`settings.json` e na tabela do `.claude/README.md`, com o motivo e o jeito de
+reverter, como a norma da frota manda.
+
+Entram no `allow` `php artisan`, `php vendor/bin/pest`, `composer
+install|validate|test`, `go build|test|vet|fmt|mod tidy`, `make`, `initdb` e `pg_ctl`
+do PostgreSQL 17, `psql` **só na porta 54329** e a ferramenta `ArtifactData`. O
+banco de desenvolvimento roda em espaço de usuário, sem sudo, e nunca toca o
+PostgreSQL do sistema, na 5432. O `make` é o mais amplo dos grupos, porque roda o
+que o Makefile disser; o Makefile é do repositório e é revisado como qualquer
+arquivo, e o motivo diz isso. Ficam em `ask` `composer require|update` e `go get`,
+porque dependência nova é decisão de cadeia de suprimento, e entram no `deny`
+`migrate:fresh`, `migrate:reset` e `db:wipe`, como na raiz do BLUE3.
+
+A linha *Testes rodam com* do `CLAUDE.md` e do `AGENTS.md` recebeu `make test`
+**antes** da permissão existir, que é a ordem que o repodocs pede. **O `Makefile` ainda
+não existe**: ele nasce no item A4 da fila. Nada foi executado neste commit — é só
+configuração —, e o JSON foi validado com `json.tool`.
+
 ## 0.1.3 - o material de definição do produto entra na fila, versionado
 
 Em 28/09/2026 o Samir colocou em `.continue/` o material da plataforma de

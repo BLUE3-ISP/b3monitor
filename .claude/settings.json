@@ -3,7 +3,7 @@
   "_comment_profile": "ESTE ARQUIVO NÃO ESCOLHE O MODELO, DE PROPÓSITO (24/09/2026 — ADR-027 do repodocs). Sem `model`, sem `fallbackModel` e nada no `env` que o direcione: sem `ANTHROPIC_MODEL`, sem `ANTHROPIC_DEFAULT_*_MODEL`, sem `CLAUDE_CODE_SUBAGENT_MODEL`. O modelo é escolha do usuário, feita com /model, e o subagente herda. Todo pin que a frota carregou sobreviveu ao modelo que nomeava: `opus[1m]` segurou sessões no Opus anterior com o mais novo já no catálogo, e `CLAUDE_CODE_SUBAGENT_MODEL=opus` mandou todo subagente para o Opus 5 com a sessão rodando o 5.5. Um pin aqui também não passa por cima das configurações gerenciadas da conta. O effortLevel mais alto que um ARQUIVO de settings aceita é 'xhigh' — escrever 'max' aqui não faz nada, em silêncio; use /effort max para uma sessão. 'xhigh' é padrão, não trava: /effort muda para a sessão (decisão do dono, repodocs 1.17.1).",
   "effortLevel": "xhigh",
   "permissions": {
-    "_comment": "Permissões do projeto b3monitor. O allow-list começa em leitura, escrita e git — NADA da stack está concedido, porque ainda não há stack. CONCEDER UMA PERMISSÃO NOVA É ATO DO DONO: ela é escrita neste arquivo junto com o motivo e com o jeito de reverter, nunca aplicada em silêncio. O DENY-LIST SEMPRE VENCE O ALLOW-LIST. CONCESSÃO DO ADR-019 DO REPODOCS (05/09/2026): as quatro entradas `gh` somente-leitura — `repo view`, `pr list`, `issue list`, `api repos/` — existem porque a cláusula do convidado exige ler o idioma de um upstream antes de escrever nele, e uma regra que pede confirmação a cada checagem é uma regra que se pula. Elas leem; não mudam nada. Para reverter, apague essas quatro linhas: a cláusula continua valendo, só pergunta toda vez. `gh repo edit` e `gh repo delete` ficam no `ask`, e o deny-list continua vencendo.",
+    "_comment": "Permissões do projeto b3monitor. O allow-list começa em leitura, escrita e git — NADA da stack está concedido, porque ainda não há stack. CONCEDER UMA PERMISSÃO NOVA É ATO DO DONO: ela é escrita neste arquivo junto com o motivo e com o jeito de reverter, nunca aplicada em silêncio. O DENY-LIST SEMPRE VENCE O ALLOW-LIST. CONCESSÃO DO ADR-019 DO REPODOCS (05/09/2026): as quatro entradas `gh` somente-leitura — `repo view`, `pr list`, `issue list`, `api repos/` — existem porque a cláusula do convidado exige ler o idioma de um upstream antes de escrever nele, e uma regra que pede confirmação a cada checagem é uma regra que se pula. Elas leem; não mudam nada. Para reverter, apague essas quatro linhas: a cláusula continua valendo, só pergunta toda vez. `gh repo edit` e `gh repo delete` ficam no `ask`, e o deny-list continua vencendo. CONCESSÃO DE BUILD (29/09/2026, ato do dono): a produção do b3monitor começa pela fatia F0-01 e precisa rodar a toolchain que as decisões D-01…D-08 fixam, sem pedir confirmação a cada comando. Entram no allow `php artisan`, `php vendor/bin/pest`, `composer install|validate|test`, `go build|test|vet|fmt|mod tidy`, `make` (o Makefile é do repositório e versionado), `initdb` e `pg_ctl` do PostgreSQL 17 e `psql` SÓ na porta 54329 — o cluster de desenvolvimento em espaço de usuário, sem sudo, que não toca o PostgreSQL do sistema na 5432 — e a ferramenta `ArtifactData`, que só atualiza o artefato de status da produção. Ficam em `ask` `composer require|update` e `go get`: dependência nova é decisão de cadeia de suprimento. Entram no deny `php artisan migrate:fresh|migrate:reset|db:wipe`, como na raiz. Para reverter, apague essas linhas e a tabela em .claude/README.md; nada além delas foi aberto.",
     "defaultMode": "plan",
     "allow": [
       "Read",
@@ -22,14 +22,32 @@
       "Bash(gh repo view:*)",
       "Bash(gh pr list:*)",
       "Bash(gh issue list:*)",
-      "Bash(gh api repos/:*)"
+      "Bash(gh api repos/:*)",
+      "Bash(php artisan:*)",
+      "Bash(php vendor/bin/pest:*)",
+      "Bash(composer install:*)",
+      "Bash(composer validate:*)",
+      "Bash(composer test:*)",
+      "Bash(go build:*)",
+      "Bash(go test:*)",
+      "Bash(go vet:*)",
+      "Bash(go fmt:*)",
+      "Bash(go mod tidy:*)",
+      "Bash(make:*)",
+      "Bash(/usr/lib/postgresql/17/bin/initdb:*)",
+      "Bash(/usr/lib/postgresql/17/bin/pg_ctl:*)",
+      "Bash(psql -h 127.0.0.1 -p 54329:*)",
+      "ArtifactData"
     ],
     "deny": [
       "Read(./**/*.pem)",
       "Read(./**/*.key)",
       "Read(./**/*.p8)",
       "Read(./**/*.p12)",
-      "Read(./**/*.pfx)"
+      "Read(./**/*.pfx)",
+      "Bash(php artisan migrate:fresh:*)",
+      "Bash(php artisan migrate:reset:*)",
+      "Bash(php artisan db:wipe:*)"
     ],
     "ask": [
       "Bash(sudo:*)",
@@ -39,7 +57,10 @@
       "Bash(curl * | sh:*)",
       "Bash(curl * | bash:*)",
       "Bash(wget * | sh:*)",
-      "Bash(wget * | bash:*)"
+      "Bash(wget * | bash:*)",
+      "Bash(composer require:*)",
+      "Bash(composer update:*)",
+      "Bash(go get:*)"
     ]
   }
 }

@@ -15,7 +15,7 @@ As regras de conduta do agente estão no [CLAUDE.md](../CLAUDE.md).
 
 | Arquivo | Papel |
 |------|------|
-| `settings.json` | O perfil **ativo**, versionado. Hoje: **nada que escolha o modelo**, `effortLevel: xhigh` (um padrão — `/effort` muda para a sessão), `defaultMode: plan`, deny-list de 5 regras, ask-list de 8 e allow-list de 17 entradas. |
+| `settings.json` | O perfil **ativo**, versionado. Hoje: **nada que escolha o modelo**, `effortLevel: xhigh` (um padrão — `/effort` muda para a sessão), `defaultMode: plan`, deny-list de 8 regras, ask-list de 11 e allow-list de 32 entradas (a concessão de build de 29/09/2026 está na tabela abaixo). |
 | `settings.local.json` | Override local da máquina, **no `.gitignore`** — pode guardar caminhos e tokens que pertencem a uma máquina só. Nunca commite. |
 | `skills/loop-work/` | A skill `/loop-work` do [skill-LOOP](https://github.com/samirhvbr/skill-loop), **vendorizada** — um retrato de `skill/loop/` de lá, com a versão e o commit de origem no `VERSION.md` dela. Não edite aqui: mude no upstream e rode de novo o `vendor.sh` de lá, que substitui a pasta inteira. |
 | `prompts/` | `continuacao.md` e `reabastecimento.md`, os modelos que o `hooks/loop-stop.py` procura três níveis acima de si. A cópia da skill fica quebrada sem eles, e em silêncio. Vêm do mesmo `vendor.sh`. |
@@ -48,10 +48,11 @@ repodocs):
 
 ## Conceder uma permissão nova é ato do dono
 
-O skeleton concede **leitura, escrita e git, e mais nada**. Nada da stack está
-concedido — nem build, nem teste, nem gerenciador de pacotes, nem cliente de
-banco. É de propósito, e aqui ainda mais: em 28/09/2026 o b3monitor não tem
-código nem stack.
+O skeleton concede **leitura, escrita e git, e mais nada**. Até 28/09/2026 nada da
+stack estava concedido, de propósito: o b3monitor não tinha código nem stack. Em
+29/09/2026 o dono decidiu a stack (D-01…D-08 do 2.0) e concedeu **só o build**,
+na tabela abaixo. Continua sem concessão tudo o que não está nela — dependência
+nova (`composer require`, `go get`), `sudo`, o PostgreSQL do sistema, deploy.
 
 Quando uma permissão precisar existir, ela é **escrita no `settings.json` junto
 com o motivo e com o jeito de reverter** — nunca aplicada em silêncio, e nunca
@@ -67,4 +68,10 @@ Norma que não bate com o artefato é defeito.
 
 | Concedido | Quando | Por quê | Reverte com |
 |---|---|---|---|
-| _(nada ainda)_ | | | |
+| `php artisan`, `php vendor/bin/pest`, `composer install\|validate\|test` | 29/09/2026 | A central é Laravel (D-01/D-06); a F0-01 precisa de migrações e de suíte Pest sem um prompt por comando | Apagar as cinco linhas do `allow` |
+| `go build\|test\|vet\|fmt\|mod tidy` | 29/09/2026 | A sonda e o vigilante são Go (D-07); mesmo motivo | Apagar as cinco linhas do `allow` |
+| `make` | 29/09/2026 | O `Makefile` (`test`, `verify`, `lab-up`, `demo`, `acceptance-lab`) é o ponto de entrada dos comandos entregáveis. **Amplo por natureza:** roda o que o Makefile do repositório disser, e ele é versionado e revisado como qualquer arquivo | Apagar a linha do `allow`; o agente passa a chamar `go test`/`php vendor/bin/pest` direto |
+| `initdb` e `pg_ctl` do PostgreSQL 17, e `psql -h 127.0.0.1 -p 54329` | 29/09/2026 | Cluster de desenvolvimento **em espaço de usuário**, na porta 54329, sem sudo e sem tocar o PostgreSQL do sistema (5432). O `psql` só alcança essa porta | Apagar as três linhas do `allow` |
+| `ArtifactData` | 29/09/2026 | Único caminho para o loop atualizar o artefato de status da produção sem republicar a página. Escreve só no `db` daquele artefato, que não guarda segredo, IP nem hostname | Apagar a linha do `allow`; o loop registra em `.loop/ASSUMPTIONS.md` que não atualizou |
+| **`ask`:** `composer require\|update`, `go get` | 29/09/2026 | Dependência nova é decisão de cadeia de suprimento: o agente pede, o dono decide | Apagar as três linhas do `ask` |
+| **`deny`:** `php artisan migrate:fresh\|migrate:reset\|db:wipe` | 29/09/2026 | Espelha a raiz do BLUE3: apagar banco não se faz por comando de agente | Apagar as três linhas do `deny` |

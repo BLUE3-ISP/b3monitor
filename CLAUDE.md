@@ -72,7 +72,9 @@ descreve existir, vira documento em `docs/`.
 
 - **Stack:** _a preencher._
 - **Roda localmente com:** _a preencher._
-- **Testes rodam com:** _a preencher — um comando que qualquer pessoa repete._
+- **Testes rodam com:** `make test` — Pest na `central/` e `go test ./...` em
+  `agents/`. O `Makefile` nasce no item A4 da fila do loop; até lá o comando
+  ainda não existe, e a entrada do changelog diz isso em vez de fingir que rodou.
 - **Nunca toque:** _a preencher._
 - **CI:** nenhum pipeline ainda. Quando precisar, ela roda no servidor `cicd`
   (`100.64.100.240`, usuário `samir`), num runner self-hosted — nunca nos
