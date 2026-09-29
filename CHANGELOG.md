@@ -9,6 +9,26 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.3 - o material de definição do produto entra na fila, versionado
+
+Em 28/09/2026 o Samir colocou em `.continue/` o material da plataforma de
+monitoramento distribuído da Blue3: `b3monitor/`, o pacote 1.0 (documentos 00–13
+e o consolidado de 161 KB, que o `README.md` da pasta repete byte a byte), e
+`b3monitor_2.0/`, a revisão 2.0 (README, glossário 14, arquitetura 02 em rascunho
+e a `REVISAO_1.0_PARA_2.0.md`, mais o `files.zip` original). Nada disso tinha
+commit, e uma fila que não está no git é uma fila que um apagamento não devolve —
+o `fleet.sh check` do repodocs acusava exatamente isso.
+
+Os arquivos entram **sem alteração de conteúdo**: fila não se arruma, nem o
+consolidado duplicado nem o zip saem. O que muda é o `.continue/README.md`, que
+agora registra a regra de leitura que o dono deu em 29/09/2026 — **o 2.0
+complementa o 1.0 e, no que conflitar, vale o 2.0** —, as decisões D-01…D-08
+aceitas no mesmo dia e as perguntas ainda abertas (Q-02, Q-03). Uma delas o
+agente assumiu e deixou marcada como reversível: os ADRs ficam em
+`docs/decisions.md`, a norma da frota, e não em `docs/adr/`, como o 14 §5 do 2.0
+escreve. É conflito entre o 2.0 e a norma do repositório, que é outro eixo da
+regra que o dono definiu.
+
 ## 0.1.2 - a CI do repositório passa a ter endereço: o servidor cicd, não os runners do GitHub
 
 Os dois runs do workflow de Release no primeiro push, `36465790740` e
