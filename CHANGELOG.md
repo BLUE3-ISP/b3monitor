@@ -9,6 +9,28 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.5 - o estado gerado e o estado local de execução ficam fora do git, por ADR
+
+O `.gitignore` do skeleton diz que tudo é versionado e que a única exceção é
+segredo, e que qualquer outra exceção exige um ADR. Com o build chegando, isso
+deixou de bastar, e a evidência apareceu antes do código: rodar uma vez o
+`loop_ctl.py` da skill vendorizada criou `__pycache__/` na árvore, e o primeiro
+`composer install` traria `vendor/` com dezenas de milhares de arquivos. Nenhum
+dos dois é fonte; ambos se refazem por um comando.
+
+O [ADR-003](docs/decisions.md) lista o que sai, e só isso: `vendor/`,
+`node_modules/`, `__pycache__/`, `dist/`, `agents/**/bin/`, o cluster PostgreSQL de
+desenvolvimento em `lab/.pgdata/` e `lab/.pgrun/`, e o estado de **máquina** do loop
+(`STATE.json`, `entries/`, `INDEX.md`, `STOP`). O que continua versionado é a
+**memória** do loop — `QUEUE.md`, `SCOPE.md`, `ASSUMPTIONS.md`, `SEM-ESCOPO`,
+`STATUS.md` e `loop.sh` —, porque a própria skill diz que ler o `ASSUMPTIONS.md` não é
+opcional, e uma fila que um `git clean` apaga destrói o que a norma protege.
+
+Conferido com `git check-ignore` nos dois sentidos: os onze caminhos de estado
+gerado saem, e os nove de memória, mais `composer.lock` e `go.sum`, ficam. O
+`fleet.sh check` do repodocs não é afetado, porque só reclama de ignorar os
+arquivos do padrão, e nenhum está na tabela.
+
 ## 0.1.4 - o build passa a ter permissão: toolchain mínima e um PostgreSQL de dev isolado
 
 A produção do b3monitor começa pela fatia F0-01, e a stack já está decidida

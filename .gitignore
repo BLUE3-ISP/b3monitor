@@ -22,6 +22,21 @@
 # Override local do agente (pode ter caminhos e tokens da máquina)
 .claude/settings.local.json
 
+# Estado GERADO e estado LOCAL de execução — ADR-003. Cada linha se reconstrói
+# por um comando; nada aqui é fonte. A memória do loop (QUEUE.md, SCOPE.md,
+# ASSUMPTIONS.md, SEM-ESCOPO, STATUS.md, loop.sh) continua VERSIONADA.
+vendor/
+node_modules/
+__pycache__/
+dist/
+agents/**/bin/
+lab/.pgdata/
+lab/.pgrun/
+.loop/STATE.json
+.loop/entries/
+.loop/INDEX.md
+.loop/STOP
+
 # Ruído de sistema operacional
 .DS_Store
 Thumbs.db

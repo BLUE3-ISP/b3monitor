@@ -93,6 +93,50 @@ fork dentro da rede do escritório (checklist do [runbook.md](runbook.md), §6).
 
 ---
 
+## ADR-003 — estado gerado e estado local de execução ficam fora do git
+
+**Status:** `ACCEPTED` · 29/09/2026
+
+**Contexto.** O `.gitignore` deste repositório dizia uma coisa só: *tudo é
+versionado, e a única exceção é segredo*, e exigia um ADR para qualquer outra
+([conventions.md §7](https://github.com/samirhvbr/repodocs/blob/master/docs/conventions.md#7-the-repository-file-standard)).
+Isso servia enquanto o repositório só tinha documentação. A produção do produto
+muda o quadro, e a evidência veio em minutos: rodar uma única vez o
+`loop_ctl.py` da skill vendorizada deixou `__pycache__/` na árvore, e o primeiro
+`composer install` deixa `vendor/` com dezenas de milhares de arquivos. Nenhuma
+das duas coisas é fonte: ambas se refazem por um comando, e versioná-las tornaria
+cada commit um ruído de binários.
+
+**Decisão.** Ficam fora do git, e só estas, porque cada uma se **reconstrói**:
+
+| Caminho | O que é |
+|---|---|
+| `vendor/`, `node_modules/` | Dependências instaladas; o `composer.lock` e o `go.sum`, esses sim versionados, dizem exatamente quais |
+| `__pycache__/` | Bytecode gerado ao rodar a skill vendorizada |
+| `dist/`, `agents/**/bin/` | Saída de build, inclusive o consolidado de `make docs-bundle` |
+| `lab/.pgdata/`, `lab/.pgrun/` | O cluster PostgreSQL de desenvolvimento, em espaço de usuário, na porta 54329 |
+| `.loop/STATE.json`, `.loop/entries/`, `.loop/INDEX.md`, `.loop/STOP` | Estado de **máquina** do loop: id de sessão, caminhos, o relato bruto de cada parada |
+
+**O que continua versionado, e é a razão de a regra ser estreita:** tudo o que é
+**memória** do loop — `.loop/QUEUE.md`, `.loop/SCOPE.md`, `.loop/ASSUMPTIONS.md`,
+`.loop/SEM-ESCOPO`, `.loop/STATUS.md` e `.loop/loop.sh`. A skill diz que revisar
+o `ASSUMPTIONS.md` *não é opcional*, porque é o preço de não ter sido
+interrompido; uma fila e um registro de premissas que um `git clean` apaga
+destroem exatamente o que a norma protege. Os `.gitignore` que o esqueleto do
+Laravel traz dentro de `central/` (`storage/`, `bootstrap/cache/`, `public/build`)
+são da mesma classe, gerado, e entram sem novo ADR.
+
+**Consequências.** O `git status` deixa de acusar o que o build e a skill geram, e
+o `fleet.sh check` do repodocs não é afetado: ele só reclama de ignorar
+`CHANGELOG.md`, `version.md`, os gêmeos, os hooks, o `release.sh` e a
+`.continue/`, e nenhum deles está na tabela. O custo é que **um segredo dentro
+dessas pastas não seria visto pelo git**: a regra do `.env` e das chaves não
+muda, e `lab/.pgdata/` guarda um banco de desenvolvimento **sem dado de produção**
+— uma senha de produção ali seria um defeito, não uma exceção. Qualquer caminho
+novo fora do git repete este ADR ou nasce de um novo.
+
+---
+
 <!-- Modelo para as próximas entradas:
 
 ## ADR-NNN — <a decisão, como frase>
