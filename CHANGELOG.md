@@ -9,6 +9,24 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.6 - o CLAUDE.md passa a apontar o material do produto, a regra de leitura e o quadro
+
+A sessão que vai rodar o loop lê o `CLAUDE.md` sozinha, e o hook só injeta em cada
+parada o **primeiro** item pendente da fila. O que tem de valer em todo turno,
+portanto, precisa morar aqui, e não na cabeça de quem armou. A seção *O que é este
+projeto* deixa de dizer que o material "vai para a `.continue/`": ele já está lá, e
+ela agora diz o que é o produto, onde ficam os dois pacotes, qual é a regra de
+leitura do dono — **o 2.0 complementa o 1.0 e vale no conflito** —, qual é a
+primeira entrega e onde está o quadro de acompanhamento.
+
+O quadro é o artefato *Produção b3monitor* (privado, com o `db` do próprio
+artefato, semeado com 76 documentos a partir dos documentos 09 e 13 e da REVISAO).
+O texto registra a única armadilha que a ferramenta impõe: escrever num documento
+que já existe exige o `if_version`, então o agente lista a coleção antes de
+atualizar. O `PRECEDENCIA.md` citado ainda **não existe**; o texto diz que ele nasce
+no item A3, em vez de fingir que já está lá. Os dois gêmeos foram regenerados e
+conferidos com `diff`.
+
 ## 0.1.5 - o estado gerado e o estado local de execução ficam fora do git, por ADR
 
 O `.gitignore` do skeleton diz que tudo é versionado e que a única exceção é

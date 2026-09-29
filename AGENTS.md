@@ -61,10 +61,29 @@ remoto alcançável ele degrada com aviso, nunca com recusa.** A válvula de esc
 
 ## O que é este projeto
 
-**b3monitor** — Blue3 Monitor. **Ainda não há código:** em 28/09/2026 o
-repositório guarda só a estrutura de documentação. O material de definição do
-projeto vai para a [`.continue/`](.continue/README.md) e, quando o que ele
-descreve existir, vira documento em `docs/`.
+**b3monitor** — Blue3 Monitor: plataforma **independente** de monitoramento
+distribuído da Blue3. Sondas medem continuamente; uma central, fora da
+infraestrutura monitorada, decide estado e incidentes; o alerta chega por push e
+Telegram. **Ainda não há código:** em 29/09/2026 o repositório guarda a estrutura
+de documentação e, na fila, o material de definição do produto.
+
+- **O material está na [`.continue/`](.continue/README.md):** `b3monitor/` é o
+  pacote 1.0 (documentos 00–13) e `b3monitor_2.0/` a revisão 2.0. **O 2.0
+  complementa o 1.0; no que conflitar, vale o 2.0** (decisão do dono,
+  29/09/2026). Comece pelo `00_PROMPT_PARA_O_AGENTE.md` e leia o
+  `PRECEDENCIA.md` do 2.0 antes de cada documento 1.0: ele diz o que foi
+  sobrescrito. Esse índice nasce no item A3 da fila do loop.
+- **A primeira entrega é a fatia F0-01:** alvo HTTP → sonda com política local →
+  ingestão durável → motor de estado → incidente → notificação em canal `dev` →
+  painel mínimo, provada por testes de sucesso, falha, ausência, duplicata,
+  resposta perdida após commit e recuperação. Documento sobre algo ainda não
+  construído fica na `.continue/`; o que passa a existir migra para `docs/`.
+- **Quadro de acompanhamento:**
+  [Produção b3monitor](https://claude.ai/artifact/PoCPZiPrkQ6qyA6Sx98iXB), um
+  artefato privado que o loop atualiza com a ferramenta `ArtifactData`. Toda
+  escrita em documento que já existe exige o `if_version`, então **liste a
+  coleção antes de escrever**. Só valem os estados de 09 §1, e
+  `implemented` não é `verified_lab`.
 
 <!-- Padrão do skeleton a substituir pelo que um agente precisa de verdade: a
      stack, onde ficam os pontos de entrada, o que roda localmente e o que nunca
