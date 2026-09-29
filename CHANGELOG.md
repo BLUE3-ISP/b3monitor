@@ -9,6 +9,33 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.7 - a fila, o escopo e as premissas do loop entram no repositório, sem armar
+
+`.loop/QUEUE.md` guarda os vinte itens que levam o repositório até *F0-01 FECHADA*:
+oito de bootstrap (F0-00) e onze mais o fechamento da fatia vertical (F0-01 do
+prompt 00), cada um numa linha que se executa sozinha e termina num critério de
+pronto que dá para conferir. Sete pendências que dependem do dono ficam como `- 🔒`
+e fora da fila de execução: a borda de rede (Q-02), o IP de saída do escritório
+(Q-03), o nome do produto, as sondas e o vigilante em provedores distintos, os
+canais de alerta, deploy e outros repositórios, e o runner de CI.
+
+O hook só entrega o primeiro `- [ ]` a cada parada, então o cabeçalho do
+`QUEUE.md` carrega as seis regras de cada fechamento — a regra de leitura (o 2.0
+vence o 1.0), o português, commit com Release à mão, atualização do quadro com o
+`if_version`, nenhum segredo e nenhum relato no chat —, porque o agente abre o
+arquivo toda vez que marca um item. O `SCOPE.md` diz o que pode entrar e o que
+para e pergunta, e o `ASSUMPTIONS.md` já nasce com as três premissas desta
+preparação: ADRs em `docs/decisions.md` e não em `docs/adr/`, `b3mon` como slug e a
+regra do repositório como autorização de push. A numeração dos ADRs da fila foi
+conferida: precedência, D-01…D-08 e versões fixadas somam dez, do ADR-004 ao
+ADR-013.
+
+**O loop não foi armado**, de propósito: armar prende a rodada ao id de uma sessão,
+e a sessão certa é uma aberta dentro do repositório, onde o hook acha o `.loop/`.
+Conferido com o `loop_ctl.py`: a fila lê 20 pendentes, 7 travados e o A1 como
+próximo, e `porque` mostra o hook barrado só no portão `.loop/`, sem `STATE.json`,
+que é o esperado.
+
 ## 0.1.6 - o CLAUDE.md passa a apontar o material do produto, a regra de leitura e o quadro
 
 A sessão que vai rodar o loop lê o `CLAUDE.md` sozinha, e o hook só injeta em cada
