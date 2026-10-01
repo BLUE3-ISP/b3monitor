@@ -38,7 +38,7 @@ help: ## Lista os alvos e diz quais ainda não existem
 	@printf '  %-19s %s\n' \
 	  'test'            'Pest na central e go test nos agentes        [A6, A7, B1]' \
 	  'verify'          'test + análise estática + contratos          [A8]' \
-	  'pg-up|down|status' 'PostgreSQL de dev isolado, porta 54329      [A5]' \
+	  'pg-up|down|status' 'PostgreSQL de dev isolado, porta 54329      [real]' \
 	  'lab-up|down'     'laboratório numa máquina só                  [B8]' \
 	  'demo'            'cenário sintético: sucesso, falha, replay    [B8]' \
 	  'acceptance-lab'  'casos de aceite da F0-01 com evidência       [B10]' \
@@ -54,13 +54,13 @@ verify: ## test + phpstan + go vet + validação dos contratos
 	$(call nao-implementado,item A8 (contratos) e os itens A6 e A7)
 
 pg-up: ## PostgreSQL 17 de desenvolvimento, em espaço de usuário, porta 54329
-	$(call nao-implementado,item A5)
+	@bash lab/pg.sh up
 
-pg-down:
-	$(call nao-implementado,item A5)
+pg-down: ## Para o PostgreSQL de desenvolvimento (os dados ficam)
+	@bash lab/pg.sh down
 
-pg-status:
-	$(call nao-implementado,item A5)
+pg-status: ## Diz se está no ar, a versão e os bancos
+	@bash lab/pg.sh status
 
 lab-up: ## Laboratório: PG, central, workers, coordenador, executor e alvo
 	$(call nao-implementado,item B8)

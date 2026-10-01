@@ -9,6 +9,30 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.12 - A5: um PostgreSQL de desenvolvimento isolado, em espaço de usuário, na porta 54329
+
+`lab/pg.sh` cria e administra um cluster PostgreSQL 17 em `lab/.pgdata`, com socket em
+`lab/.pgrun`, **sem `sudo` e sem tocar o PostgreSQL do sistema**, que segue de pé na 5432.
+`make pg-up`, `pg-down` e `pg-status` chamam o script, que é idempotente: na primeira vez faz
+`initdb`, depois só sobe e garante os roles e bancos `b3mon_dev` e `b3mon_test` (o segundo é
+onde a suíte vai rodar, para nunca limpar o primeiro). Antes de subir, o script recusa se
+outro processo já segura a porta 54329, em vez de iniciar em silêncio numa porta que outra
+coisa responde, e limpa as variáveis `PG*` do ambiente para nada desviar para o cluster do
+sistema.
+
+Rodado de verdade, com o comando do critério de pronto: `psql -h 127.0.0.1 -p 54329 -U
+b3mon_dev -d b3mon_dev -c 'select version()'` responde PostgreSQL 17.11. Conferido também que
+`pg-up` rodado duas vezes não recria nada, que `pg-down` para e `pg-status` sai com erro 3, que
+o cluster volta com os dados (uma linha gravada antes da parada, lida depois) e que o
+`postgresql@17-main` do sistema continua ativo. O `git status` não mostra nada de `lab/.pg*`, e
+o `check-ignore` aponta as linhas do ADR-003.
+
+**A autenticação é `trust` em loopback**, e isso é uma escolha com custo: qualquer processo local
+conecta como qualquer role. É aceitável porque o cluster só guarda dados de laboratório e nunca
+uma credencial de produção; o aviso está no topo do script, e a premissa em
+`.loop/ASSUMPTIONS.md` diz como trocar por `scram-sha-256`. O `Makefile` perde três alvos
+`não implementado`.
+
 ## 0.1.11 - A4: o layout do repositório, um Makefile que não finge e os gatilhos de versão
 
 Nascem `central/`, `agents/probe/`, `agents/watchdog/`, `contracts/{openapi,schemas,fixtures}/`,
