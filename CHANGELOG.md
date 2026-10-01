@@ -9,6 +9,25 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.9 - A2: as decisões da revisão 2.0 viram dez ADRs, do 004 ao 013
+
+O `docs/decisions.md` passa de três para treze ADRs. O ADR-004 registra a regra do dono, de
+29/09/2026: o 2.0 complementa o 1.0 e vale no conflito, sem reescrever nenhum documento 1.0.
+Do 005 ao 012, um ADR por decisão da revisão (D-01 a D-08), cada um com o contexto medido,
+a consequência e o "se o dono discordar" que a revisão já trazia: Debian bare-metal com
+systemd, executor Go nativo no lugar do Blackbox, PostgreSQL 17, sem Redis no caminho crítico,
+módulo no app BLUE3, Blade com Livewire e CoreUI 5, Go na sonda e no vigilante, e o monorepo.
+
+O ADR-013 fixa as versões do A1 e decide o que o A1 deixou em aberto: a **toolchain de Go**
+fica por conta do próprio Go, com `toolchain go1.26.8` no `go.mod`, porque isso se reproduz
+por um arquivo versionado e dispensa `sudo`. O custo está escrito no ADR: o primeiro `go test`
+baixa a toolchain pela rede, e um runner sem rede precisa dela já presente. É decisão do agente
+e reversível, e por isso está também em `.loop/ASSUMPTIONS.md`.
+
+Dois acertos de fato em relação à revisão. A D-08 citava a organização `blue3-internet`, e a
+real é `BLUE3-ISP`; o ADR-012 diz isso. E a numeração da fila estava certa, mas a contagem do
+plano original (004 a 011) não: precedência, oito decisões e versões somam dez.
+
 ## 0.1.8 - A1: a toolchain foi inspecionada contra os mantenedores, e o Go instalado está fora de suporte
 
 Primeiro item da fila do loop (F0-00). Nada foi instalado: o item só lê. O resultado está

@@ -36,3 +36,15 @@ primeiras nasceram na preparação, em 29/09/2026, antes de o loop ser armado.
   continuam exigindo autorização específica.
 - **Descartada:** acumular commits locais até o fim da rodada.
 - **Reverter:** dizer ao agente para parar de dar push; nada na fila depende dele.
+
+## 4. Toolchain de Go: automática pelo `go.mod`, não instalação à parte (01/10/2026, item A2)
+
+- **Pergunta:** o Go instalado (1.24.4) está fora de suporte, e os módulos da sonda pedem
+  `go 1.26.0`. Instalar o Go 1.26 em espaço de usuário ou deixar a toolchain automática do Go
+  baixá-lo?
+- **Decisão:** toolchain automática, com `toolchain go1.26.8` no `go.mod` (ADR-013). Reproduz-se
+  por um arquivo versionado, sem `sudo`.
+- **Descartada:** instalar o Go 1.26 em `~/sdk` ou em `/usr/local`, que deixa a versão fora do
+  repositório. Também o Go 1.27.1, mais novo mas só da série mais recente.
+- **Reverter:** trocar a linha `toolchain` do `go.mod` e, se for o caso, instalar o Go à parte.
+  Custo conhecido: o primeiro `go test` baixa a toolchain pela rede.
