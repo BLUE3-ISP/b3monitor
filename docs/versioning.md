@@ -45,17 +45,19 @@ como um deploy errado é aprovado.
 Bumpe o `version.md` **no mesmo commit da mudança que ele descreve.** Nunca num
 commit só dele.
 
-<!-- PADRÃO A SUBSTITUIR. As três posições e a disciplina são a convenção da
-     frota. O QUE CONTA COMO Z É PRÓPRIO DE CADA PROJETO — troque os exemplos
-     pelos gatilhos reais deste projeto, concretos o bastante para que duas
-     pessoas classifiquem a mesma mudança do mesmo jeito. O b3monitor ainda não
-     tem stack nem código (28/09/2026): _a preencher_ quando existir. -->
+As três posições e a disciplina são a convenção da frota; o que conta como Z é
+próprio de cada projeto. Os gatilhos abaixo são os do b3monitor (decididos em
+01/10/2026, item A4 da fila do loop), concretos o bastante para que duas pessoas
+classifiquem a mesma mudança do mesmo jeito.
 
 | Parte | Quando se move | Quem move |
 |---|---|---|
-| **Z** | _a preencher — ex.: uma tela nova, uma tabela nova no banco, uma mudança de layout, um botão renomeado, uma correção de texto_ | Toda mudança. O caso normal. |
-| **Y** | _a preencher — ex.: um serviço principal novo, um redesenho de API, uma quebra de compatibilidade, uma fase concluída_ | Quando entra |
-| **X** | Reservado — uma versão estável | Manual, decisão do dono |
+| **Z** | Uma migração, um endpoint, um teste ou fixture, um ADR, um documento, uma tela do painel, um alvo do `Makefile`, uma correção de texto ou de código | Toda mudança. O caso normal. |
+| **Y** | Um componente principal novo (sonda, vigilante, worker, painel); uma mudança em `contracts/` que quebra a compatibilidade; ou uma **fatia do backlog fechada** com evidência (F0-01, F0-02…). **Fechar a F0-01 é a `0.2.0`** | Quando entra |
+| **X** | Reservado — uma versão estável: o piloto real liberado (Gate 0B) | Manual, decisão do dono |
+
+**Um Y zera o Z.** A `0.1.x` atual é a fase de preparação (documentação, fila e
+bootstrap): nenhum componente do produto existe ainda.
 
 ## Quem commita, e quando
 

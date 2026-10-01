@@ -9,6 +9,29 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.11 - A4: o layout do repositório, um Makefile que não finge e os gatilhos de versão
+
+Nascem `central/`, `agents/probe/`, `agents/watchdog/`, `contracts/{openapi,schemas,fixtures}/`,
+`deploy/systemd/`, `lab/` e `evidence/` (com `.gitkeep`, porque pasta vazia não vai para o git),
+a estrutura de 02 §4 do pacote 2.0 sem o diretório mobile que a D-08 tirou.
+
+O `Makefile` traz os alvos de 02 §10 com uma regra só: **o que ainda não tem o que fazer falha**,
+e diz qual item da fila o implementa. Um `make test` verde sem teste nenhum seria o falso verde
+que o 00 §3 proíbe. Rodado de verdade: `make test`, `verify` e `pg-up` saem com erro e a
+mensagem certa (`não implementado: central/ no item A6; agents/ no item A7; motor no item B1`),
+e `make deploy-central` é **recusado**, porque deploy exige autorização do dono e backup prévio
+(11 §7). O único alvo real é `make docs-bundle`, que gera em `dist/` o consolidado na ordem de
+leitura 2.0 (o 02 do 2.0 no lugar do 1.0): 2.401 linhas, 17 arquivos de origem, e `dist/` fica
+fora do git pelo ADR-003.
+
+O `CLAUDE.md` e o `AGENTS.md` deixam de ter campo a preencher: *Stack* aponta Laravel 13, Go
+com a toolchain do ADR-013, PostgreSQL 17 e a ausência de Docker; *Roda localmente com* e
+*Testes rodam com* dizem **que falham hoje e por quê**, em vez de prometer o que não existe;
+*Nunca toque* nomeia o `.env`, a porta 5432, os documentos 1.0, as cópias do repodocs e a
+produção. Os gatilhos de versão, que o skeleton deixava como exemplo, ficam definidos aqui e em
+`docs/versioning.md`: Z é o caso normal; Y é componente principal novo, contrato que quebra
+compatibilidade ou **fatia do backlog fechada**; fechar a F0-01 é a `0.2.0`; X é do dono.
+
 ## 0.1.10 - A3: o PRECEDENCIA.md diz o que o 2.0 sobrescreve em cada documento do 1.0
 
 `.continue/b3monitor_2.0/PRECEDENCIA.md` é o índice que o ADR-004 pede: **nenhum documento 1.0

@@ -89,12 +89,25 @@ de documentação e, na fila, o material de definição do produto.
      stack, onde ficam os pontos de entrada, o que roda localmente e o que nunca
      deve ser tocado. -->
 
-- **Stack:** _a preencher._
-- **Roda localmente com:** _a preencher._
+- **Stack:** central em **Laravel 13** (PHP 8.4, Pest 5, Blade + Livewire 4 +
+  CoreUI 5) em `central/`; sonda e vigilante em **Go** (toolchain `go1.26.8`) em
+  `agents/`; PostgreSQL 17; contratos em JSON Schema e OpenAPI 3.1 em
+  `contracts/`; units systemd em `deploy/`. Debian 13 bare-metal, **sem Docker**
+  ([ADR-005](docs/decisions.md)). Versões fixadas no
+  [ADR-013](docs/decisions.md).
+- **Roda localmente com:** `make pg-up` (PostgreSQL de dev, porta 54329),
+  `make lab-up` e `make demo`. **Hoje cada um falha com `não implementado:
+  <item>`**, de propósito: eles nascem nos itens A5 e B8 da fila do loop. `make
+  docs-bundle` é o único real.
 - **Testes rodam com:** `make test` — Pest na `central/` e `go test ./...` em
-  `agents/`. O `Makefile` nasce no item A4 da fila do loop; até lá o comando
-  ainda não existe, e a entrada do changelog diz isso em vez de fingir que rodou.
-- **Nunca toque:** _a preencher._
+  `agents/`. O `Makefile` existe desde o A4, mas `make test` **ainda falha** com
+  `não implementado`: a central nasce no A6 e os agentes no A7. Um alvo que não
+  tem o que testar falha, nunca passa.
+- **Nunca toque:** `.env` e qualquer segredo; o PostgreSQL do sistema (porta
+  5432); os documentos 1.0 em `.continue/b3monitor/`, que **não são reescritos**
+  ([ADR-004](docs/decisions.md)); `tools/` e `.github/workflows/release.yml`, que
+  são cópias do repodocs; e produção, rede, DNS e roteador, que pedem autorização
+  específica.
 - **CI:** nenhum pipeline ainda. Quando precisar, ela roda no servidor `cicd`
   (`100.64.100.240`, usuário `samir`), num runner self-hosted — nunca nos
   runners hospedados do GitHub ([ADR-002](docs/decisions.md),
@@ -351,13 +364,12 @@ Tag and Release title are the **bare version — no `v` prefix**.
 Formato: `versão - descrição curta em português`. A versão vem do
 [version.md](version.md), **bumpada no mesmo commit**:
 
-<!-- Padrão do skeleton a substituir. Os slots X/Y/Z e a disciplina são
-     convenção da frota; o que conta como Z é de cada projeto — troque estes
-     exemplos pelos gatilhos reais do b3monitor quando houver stack. -->
-
-- **Z** — _a preencher — ex.: uma tela nova, uma tabela nova, uma mudança de layout, uma correção de texto._
-- **Y** — _a preencher — ex.: um serviço principal novo, um redesenho de API, uma quebra de compatibilidade._
-- **X** — reservado; uma versão estável, à mão.
+- **Z** — uma migração, um endpoint, um teste ou fixture, um ADR, um documento,
+  uma tela do painel, um alvo do `Makefile`, uma correção. **O caso normal.**
+- **Y** — um componente principal novo (sonda, vigilante, worker, painel), uma
+  mudança em `contracts/` que quebra a compatibilidade, ou uma **fatia do
+  backlog fechada** com evidência (F0-01, F0-02…). Fechar a F0-01 é `0.2.0`.
+- **X** — reservado; uma versão estável, à mão: o piloto real liberado (Gate 0B).
 
 Proibido: prefixos `feat:` / `fix:` / `chore:` e mensagens vagas ("ajuste",
 "update", "wip"). Vários commits podem dividir uma versão — agrupe por assunto,
