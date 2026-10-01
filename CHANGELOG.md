@@ -9,6 +9,31 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.8 - A1: a toolchain foi inspecionada contra os mantenedores, e o Go instalado está fora de suporte
+
+Primeiro item da fila do loop (F0-00). Nada foi instalado: o item só lê. O resultado está
+em `docs/status/SESSOES.md`, o registro append-only do que o agente fez de fato, com a
+tabela de versão instalada × suportada × escolhida e a URL consultada em cada linha, todas
+lidas em 01/10/2026.
+
+O achado que muda o plano é o **Go**. O 1.24.4 desta máquina está fora da política de
+suporte do projeto, que hoje mantém o 1.27.1 e o 1.26.8, e os módulos que a sonda precisa
+pedem `go 1.26.0` (`golang.org/x/net` v0.59.0 e `modernc.org/sqlite` v1.60.1) e `go 1.25.0`
+(`miekg/dns` v1.1.73). O `GOTOOLCHAIN` está em `auto`, conferido com `go env`, então nada
+quebra: o Go baixa a toolchain pedida pelo `go.mod`. Mas o primeiro `go test` passa a depender
+da rede, e escolher entre isso e uma instalação em espaço de usuário é decisão do ADR-013
+(item A2), não desta passada.
+
+Do lado do PHP, o **Pest 5 exige 8.4 ou mais novo**, o que fixa o piso; a máquina tem o
+8.4.26 e o Laravel 13 (13.34.0, de 29/09/2026) aceita 8.3 a 8.5. O suporte ativo do 8.4 acaba
+em 31/12/2026, e a revisão para o 8.5 fica registrada. A página de release notes do Laravel
+ainda descreve o 13 como "Q1 2026" apesar de a release existir, então vale a versão do
+GitHub. Livewire 4.4.7, CoreUI 5.9.0, PostgreSQL 17.11 (fim em 08/11/2029) e Node 24 (em
+manutenção a partir de 20/10/2026, só para os assets) estão sem conflito. Composer, git e
+make constam como **não verificados**: são ferramentas do sistema, sem consulta a fonte
+oficial nesta passada. Que `modernc.org/sqlite` dispensa cgo é a documentação do projeto; a
+prova é do item A7.
+
 ## 0.1.7 - a fila, o escopo e as premissas do loop entram no repositório, sem armar
 
 `.loop/QUEUE.md` guarda os vinte itens que levam o repositório até *F0-01 FECHADA*:

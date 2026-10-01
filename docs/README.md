@@ -16,6 +16,7 @@ deixa de ser lido.
 | [decisions.md](decisions.md) | **ADRs** — o registro cronológico do que foi decidido aqui e por quê, para não ser rediscutido. |
 | [security.md](security.md) | O documento normativo de segurança. Num conflito com qualquer outro documento, ele vence. |
 | [runbook.md](runbook.md) | Da máquina limpa até o ambiente rodando; deploy; o checklist antes de tornar o repositório público. |
+| [status/SESSOES.md](status/SESSOES.md) | **O que o agente fez de fato, sessão por sessão** (append-only): o que mudou, os comandos realmente executados, o que não pôde rodar e a próxima fatia exata. Inclui a tabela de versões instalada × suportada × escolhida da toolchain. |
 | [repodocs.md](repodocs.md) | **O que neste repositório veio do padrão da frota, e onde cada peça vive.** O mapa da relação: o que sai do repodocs por cópia, o que sai por carimbo e o que só é linkado; o manifesto dos arquivos e o que se perde quando falta um; como uma regra da frota chega a este repositório. |
 
 <!-- Acrescente as páginas do próprio projeto conforme forem escritas. As que
