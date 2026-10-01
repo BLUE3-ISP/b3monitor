@@ -48,7 +48,7 @@ de segurança (07) › estados (03) › prova de caminho (05) › contratos (06)
 | Item | Estado | Quem destrava |
 |---|---|---|
 | [`b3monitor/`](b3monitor/README.md) — pacote **1.0** da plataforma de monitoramento distribuído (docs 00–13; o `README.md` dele é o consolidado inteiro, idêntico byte a byte a `blue3_monitoramento_documentacao_consolidada_v1.0.md`) | Nada implementado. É a base da produção; começa por `00_PROMPT_PARA_O_AGENTE.md` | Samir — quando a F0-01 existir, o que ela descreve migra para `docs/` |
-| [`b3monitor_2.0/`](b3monitor_2.0/README.md) — revisão **2.0**: README, glossário (14), arquitetura (02, rascunho) e `REVISAO_1.0_PARA_2.0.md`; `files.zip` é o pacote original desses quatro | Vale onde conflita com o 1.0. **D-01…D-08 aceitas em 29/09/2026**; o que sobrescreve o quê vira `PRECEDENCIA.md` (item A3 da fila do loop) | Samir — só as perguntas abertas da §3 |
+| [`b3monitor_2.0/`](b3monitor_2.0/README.md) — revisão **2.0**: README, glossário (14), arquitetura (02, rascunho) e `REVISAO_1.0_PARA_2.0.md`; `files.zip` é o pacote original desses quatro | Vale onde conflita com o 1.0. **D-01…D-08 aceitas em 29/09/2026**; o que sobrescreve o quê está em [`PRECEDENCIA.md`](b3monitor_2.0/PRECEDENCIA.md) (índice de sobreposição, 39 linhas D, C e L) | Samir — só as perguntas abertas da §3 |
 
 ## 2. Para onde as coisas foram
 

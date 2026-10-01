@@ -9,6 +9,26 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.10 - A3: o PRECEDENCIA.md diz o que o 2.0 sobrescreve em cada documento do 1.0
+
+`.continue/b3monitor_2.0/PRECEDENCIA.md` é o índice que o ADR-004 pede: **nenhum documento 1.0
+foi reescrito**. Ele traz a ordem de leitura 2.0, os três arquivos substituídos por inteiro
+(o README-consolidado, o 02 e o 14 novo), uma seção para cada documento de 00 a 13 e uma tabela
+com **uma linha por ID da revisão**: oito D, vinte e três C e oito L, mais os nove defeitos de
+empacotamento (P) já resolvidos, o que o 2.0 acrescenta e as invariantes com ID.
+
+A conferência está no próprio arquivo e foi rodada: os 39 IDs aparecem cada um uma vez na
+primeira coluna, as 14 seções existem, e o `grep` por Blackbox, Redis e Docker nos documentos
+1.0 cai exatamente em oito deles (00, 02, 04, 06, 07, 10, 11 e 12), todos com a passagem citada
+na seção correspondente. Duas passagens que a primeira versão deixava de fora, o "HA por usar
+Docker" do 11 §2 e os links do Blackbox no 12 §6, foram acrescentadas depois da conferência.
+
+Uma coisa o índice **não** pôde fazer: as invariantes `INV-01` a `INV-12` não têm numeração em
+lugar nenhum, porque o 01 do 2.0, que as numeraria, nunca foi escrito, e o 14 só cita o
+INV-03. O índice as numera pela ordem do 00 §3, que bate com esse INV-03, e diz na própria
+tabela que é derivação e não numeração oficial. A premissa está em `.loop/ASSUMPTIONS.md`. O
+`CLAUDE.md` e o `.continue/README.md` deixam de dizer que o índice "nasce no item A3".
+
 ## 0.1.9 - A2: as decisões da revisão 2.0 viram dez ADRs, do 004 ao 013
 
 O `docs/decisions.md` passa de três para treze ADRs. O ADR-004 registra a regra do dono, de

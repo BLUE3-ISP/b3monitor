@@ -48,3 +48,14 @@ primeiras nasceram na preparação, em 29/09/2026, antes de o loop ser armado.
   repositório. Também o Go 1.27.1, mais novo mas só da série mais recente.
 - **Reverter:** trocar a linha `toolchain` do `go.mod` e, se for o caso, instalar o Go à parte.
   Custo conhecido: o primeiro `go test` baixa a toolchain pela rede.
+
+## 5. Numeração das invariantes INV-01 a INV-12 (01/10/2026, item A3)
+
+- **Pergunta:** o 2.0 numera as invariantes em 01 §3, mas esse arquivo nunca foi escrito, e o 14 só
+  cita o INV-03. Qual numeração usar?
+- **Decisão:** a ordem do 00 §3 (a única repetição autorizada das invariantes no 1.0), que bate com
+  o INV-03 do 14, mais o INV-12 novo (D-05, T-075). Está em `PRECEDENCIA.md` §5, marcada como
+  derivação do índice e não como numeração oficial.
+- **Descartada:** esperar o 01 do 2.0, que bloquearia todo teste que cita INV.
+- **Reverter:** se o 01 do 2.0 vier a ser escrito, ele manda; renumerar `PRECEDENCIA.md` §5 e os
+  testes que citam INV.

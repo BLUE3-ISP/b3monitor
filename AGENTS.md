@@ -72,7 +72,7 @@ de documentação e, na fila, o material de definição do produto.
   complementa o 1.0; no que conflitar, vale o 2.0** (decisão do dono,
   29/09/2026). Comece pelo `00_PROMPT_PARA_O_AGENTE.md` e leia o
   `PRECEDENCIA.md` do 2.0 antes de cada documento 1.0: ele diz o que foi
-  sobrescrito. Esse índice nasce no item A3 da fila do loop.
+  sobrescrito. Esse índice é o [`b3monitor_2.0/PRECEDENCIA.md`](.continue/b3monitor_2.0/PRECEDENCIA.md).
 - **A primeira entrega é a fatia F0-01:** alvo HTTP → sonda com política local →
   ingestão durável → motor de estado → incidente → notificação em canal `dev` →
   painel mínimo, provada por testes de sucesso, falha, ausência, duplicata,
