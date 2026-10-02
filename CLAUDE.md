@@ -95,14 +95,16 @@ de documentação e, na fila, o material de definição do produto.
   `contracts/`; units systemd em `deploy/`. Debian 13 bare-metal, **sem Docker**
   ([ADR-005](docs/decisions.md)). Versões fixadas no
   [ADR-013](docs/decisions.md).
-- **Roda localmente com:** `make pg-up` (PostgreSQL de dev, porta 54329),
-  `make lab-up` e `make demo`. **Hoje cada um falha com `não implementado:
-  <item>`**, de propósito: eles nascem nos itens A5 e B8 da fila do loop. `make
-  docs-bundle` é o único real.
-- **Testes rodam com:** `make test` — Pest na `central/` e `go test ./...` em
-  `agents/`. O `Makefile` existe desde o A4, mas `make test` **ainda falha** com
-  `não implementado`: a central nasce no A6 e os agentes no A7. Um alvo que não
-  tem o que testar falha, nunca passa.
+- **Roda localmente com:** `make pg-up` (PostgreSQL de dev em espaço de usuário,
+  porta 54329; `pg-down` e `pg-status` também). `make lab-up` e `make demo`
+  **falham com `não implementado: <item>`**, de propósito: nascem no item B8 da
+  fila do loop. Os passos e as variáveis do `.env` estão em
+  [docs/runbook.md](docs/runbook.md), seções 2 e 3.
+- **Testes rodam com:** `make test` — a suíte Pest da `central/`, **só no banco
+  `b3mon_test`** (a trava do `tests/TestCase.php` recusa qualquer outro) e
+  `go test ./...` em `agents/`. Os agentes ainda não têm módulo Go (item A7), e a
+  suíte deles é **pulada em voz alta, o que não conta como aprovada**. Um alvo que
+  não tem o que fazer falha; um que só tem parte, diz qual parte pulou.
 - **Nunca toque:** `.env` e qualquer segredo; o PostgreSQL do sistema (porta
   5432); os documentos 1.0 em `.continue/b3monitor/`, que **não são reescritos**
   ([ADR-004](docs/decisions.md)); `tools/` e `.github/workflows/release.yml`, que

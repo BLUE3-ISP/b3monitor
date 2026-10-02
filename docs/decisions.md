@@ -357,6 +357,14 @@ máquina sem rede, como um runner de CI isolado, precisa dela já presente. O 1.
 das duas séries mantidas, e o 1.27 entra por novo ADR. Composer, git e make não foram verificados
 em fonte oficial. **Reverter:** trocar a linha `toolchain` e, se for o caso, instalar o Go à parte.
 
+**Atualização de 02/10/2026 (item A6).** Ao criar a central, o `composer create-project` do
+Laravel 13 trouxe `pestphp/pest ^4.7` e `phpunit/phpunit ^12.5` já fixados no `composer.json`
+do esqueleto, e o `composer require pestphp/pest:^5.0` sozinho **falhou**: o Pest 5 exige o
+**PHPUnit 13**. A central sobe os dois juntos, e o resultado instalado é Pest **5.3.0** (a
+tabela diz 5.2.1, que era a última em 01/10), `pestphp/pest-plugin-laravel` 5.0.1 e PHPUnit
+**13.3.6**, com Laravel 13.34.0. O que o ADR fixou (`^5.0`) continua verdadeiro; o que faltava
+nele era a exigência do PHPUnit 13, que o esqueleto do Laravel ainda não acompanha.
+
 ---
 
 <!-- Modelo para as próximas entradas:

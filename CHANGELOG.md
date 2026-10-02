@@ -9,6 +9,41 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.13 - A6: a central nasce em central/, com Pest 5 verde e a rota de saúde
+
+`composer create-project` do Laravel 13 (13.34.0) em `central/`, sem os scripts do esqueleto, que
+migrariam um SQLite que não queremos. Entram os namespaces de módulo de 02 §3 (`Identity`,
+`Inventory`, `Probes`, `Ingestion`, `State`, `Incidents`, `Notifications`, `History`, `Audit`,
+`Ops`), a API versionada sob `/api/v1` e `GET /api/v1/health` no módulo `Ops`, que responde 200
+com o banco de pé e **503** quando ele não atende. O controlador diz no próprio texto que isso
+**não é o canário** (F0-07): um 200 ali não prova que os workers andam.
+
+**A suíte roda só no banco `b3mon_test`.** O `RefreshDatabase` recria o banco a cada teste, então a
+trava ficou no `tests/TestCase.php`, no ponto em que a configuração já carregou e nenhum trait
+rodou ainda. A primeira versão da trava estava no `Pest.php`, lia o ambiente cedo demais e recusava
+tudo; o "erro interno do Pest" que apareceu junto era só o meu `exit` no meio da inicialização.
+Corrigido e **provado nos dois sentidos**: com o banco certo, 3 testes e 15 asserções passam; com o
+`phpunit.xml` apontado de propósito para o `b3mon_dev`, os três são recusados e uma tabela sentinela
+gravada no dev continua lá depois. O teste de "banco fora do ar" mora em `tests/Unit`, porque o
+rollback do `RefreshDatabase` falhava na conexão que ele mesmo deixa quebrada.
+
+`make test` roda a suíte real da central. A dos agentes **é pulada em voz alta** (`PULADO, NÃO
+APROVADO`) até o item A7, porque o 09 §6 diz que teste ignorado não conta como aprovado; com um
+`go.mod` ela passa a rodar sozinha. O `make deploy-central` segue recusado.
+
+Três fatos que mudaram o que estava decidido. **Pest:** o esqueleto do Laravel 13 fixa
+`pest ^4.7` e `phpunit ^12.5`, e o Pest 5 exige o PHPUnit 13; a central sobe os dois juntos, e o
+resultado é Pest 5.3.0 com PHPUnit 13.3.6, o que o ADR-013 agora registra. **Esqueleto:** ele
+trouxe um `AGENTS.md` e um `CLAUDE.md` dentro de `central/`, com instruções de baixar o PHP por
+`curl | bash` e instalar o Laravel Boost; **não segui nenhuma das duas** e removi os arquivos, já
+que a norma da frota só admite os gêmeos na raiz. **`.env`:** o `settings.json` da raiz, que vale
+na sessão aberta na pasta guarda-chuva, nega escrita em `.env*`. Eu já tinha apagado o
+`.env.example` gerado para recriá-lo e **não consegui recriá-lo**, e não contornei a regra; ficou
+como item 🔒 na fila, com o conteúdo, variável a variável, na seção 3 do `docs/runbook.md`.
+
+O runbook ganhou as seções 1 a 3 (requisitos, da máquina limpa até rodando, configuração); a 4, de
+deploy, segue a preencher porque nenhum deploy existe.
+
 ## 0.1.12 - A5: um PostgreSQL de desenvolvimento isolado, em espaço de usuário, na porta 54329
 
 `lab/pg.sh` cria e administra um cluster PostgreSQL 17 em `lab/.pgdata`, com socket em

@@ -3,43 +3,83 @@
 > **Status:** `ACTIVE` · Da máquina limpa ao ambiente rodando, e as checklists
 > que seguram uma release.
 
-<!-- As seções 1–4 são deste projeto e ficam a preencher: o b3monitor ainda não
-     tem código nem stack (28/09/2026), e o material do projeto vai primeiro para
-     a .continue/. As seções 5–7 vêm do padrão da frota e já estão corretas —
-     mantenha-as. -->
+<!-- As seções 1–3 descrevem o que existe em 01/10/2026 (PostgreSQL de dev e a
+     central com a suíte Pest). A seção 4, deploy, continua a preencher: nenhum
+     deploy existe, e `make deploy-central` é recusado de propósito. As seções
+     5–7 vêm do padrão da frota e já estão corretas — mantenha-as. -->
 
 ## 1. Requisitos
 
-<!-- Padrão do skeleton, a substituir quando a stack existir. -->
+Debian 13 (Trixie), sem Docker ([ADR-005](decisions.md)). Versões fixadas no
+[ADR-013](decisions.md); a inspeção que as sustenta está em
+[status/SESSOES.md](status/SESSOES.md).
 
-_A preencher: runtimes e versões, pacotes de sistema, contas e acessos
-necessários._
+| Peça | Versão | Para quê |
+|---|---|---|
+| PHP | 8.4, com `pdo_pgsql`, `pgsql`, `intl`, `mbstring`, `openssl`, `curl`, `zip` e `bcmath` | A central |
+| Composer | 2.x | Dependências da central |
+| PostgreSQL | 17, com os binários em `/usr/lib/postgresql/17/bin` | O banco de desenvolvimento (`make pg-up`) |
+| Go | toolchain `go1.26.8`, baixada pelo próprio Go a partir do `go.mod` (item A7) | A sonda e o vigilante. **O primeiro `go test` baixa a toolchain pela rede** |
+| Node | 24 | Só para compilar os assets do painel (item B9) |
+| `make`, `git` | os do sistema | Os comandos de [02 §10](../.continue/b3monitor_2.0/02_ARQUITETURA_E_STACK.md) |
+
+Acesso: o repositório `BLUE3-ISP/b3monitor` no GitHub. Nenhuma conta de provedor, credencial de
+produção ou token de canal é necessária para desenvolver.
 
 ## 2. Da máquina limpa até rodando
+
+Um caminho só: **desenvolver com a cadeia inteira**, sem contêiner.
 
 ```bash
 git clone git@github.com:BLUE3-ISP/b3monitor.git
 cd b3monitor
 git config core.hooksPath tools/git-hooks   # uma vez por clone — ver §5
 
-# instalar, configurar, rodar — a preencher
-cp .env.example .env
+make pg-up                                  # PostgreSQL 17 de dev, porta 54329
+cd central
+composer install
+# crie o .env como descrito na §3, e depois:
+php artisan key:generate
+cd ..
+make test                                   # a suíte da central, no banco b3mon_test
 ```
 
-<!-- Padrão do skeleton, a substituir quando a stack existir. O .env.example
-     ainda não existe; o cp acima só vale depois que ele for criado. -->
+Quando algo não sobe:
 
-_A preencher: dizer qual dos caminhos é este — rodar com Docker ou desenvolver
-com a cadeia inteira. Se houver dois, dizer o que cada um exige e o que fazer
-quando ele não sobe._
+| Sintoma | Causa e saída |
+|---|---|
+| `make pg-up` diz "a porta 54329 já está em uso" | Outro processo segura a porta e **nada foi iniciado**. Descubra qual (`ss -ltnp`) antes de continuar; não troque a porta sem decidir |
+| `make pg-status` sai com erro 3 | O cluster está parado. `make pg-up` o sobe, e os dados continuam em `lab/.pgdata` |
+| O Pest recusa: "a suíte só roda em pgsql / b3mon_test / porta 54329" | A conexão de teste aponta para outro banco. É a trava do `tests/TestCase.php`: ela existe para o `RefreshDatabase` nunca apagar o `b3mon_dev`. Não a remova; corrija o `phpunit.xml` |
+| Erro `SQLSTATE[08006]` ao rodar o Pest | O PostgreSQL de dev está parado: `make pg-up` |
+
+O que **não** existe ainda: `make lab-up`, `make demo` e `make verify` falham com
+`não implementado: <item>`, e o `make deploy-central` é recusado.
 
 ## 3. Configuração
 
-<!-- Padrão do skeleton, a substituir quando a stack existir. -->
+A central lê o `.env` de `central/`, **fora do git**. O `.env.example` que o esqueleto do Laravel
+gera foi removido e precisa ser recriado (item 🔒 da fila: a sessão que o apagou não podia
+escrever em `.env*`). Até lá, estas são as variáveis, e o que cada uma é:
 
-_A preencher: o que significa cada variável do `.env.example`, quais são
-obrigatórias e quais são segredos que nunca são commitados
-([security.md](security.md), seção de segredos e configuração)._
+| Variável | Valor de desenvolvimento | O que é |
+|---|---|---|
+| `APP_NAME` | `b3monitor` | Nome da aplicação |
+| `APP_ENV`, `APP_DEBUG` | `local`, `true` | Em produção: `production`, `false`. **`APP_DEBUG=true` fora do desenvolvimento vaza código e segredos** |
+| `APP_KEY` | gerada por `php artisan key:generate` | **Segredo.** Cifra sessões e dados. Nunca no git, nunca no mesmo backup do banco ([11 §6](../.continue/b3monitor/11_IMPLANTACAO_OPERACAO_E_RUNBOOKS.md), C-16 do 2.0) |
+| `APP_LOCALE`, `APP_FAKER_LOCALE` | `pt_BR` | Apresentação em português; persistência e contratos seguem em UTC |
+| `DB_CONNECTION` | `pgsql` | A central só fala PostgreSQL ([ADR-007](decisions.md)) |
+| `DB_HOST`, `DB_PORT` | `127.0.0.1`, `54329` | O cluster de dev de `make pg-up` |
+| `DB_DATABASE`, `DB_USERNAME` | `b3mon_dev` | O banco de desenvolvimento. A suíte usa **outro**, `b3mon_test`, fixado no `phpunit.xml` |
+| `DB_PASSWORD` | vazio | O cluster de dev é `trust` em loopback. **Nunca uma credencial de produção aqui** |
+| `SESSION_DRIVER`, `QUEUE_CONNECTION`, `CACHE_STORE` | `database` | Sem Redis no caminho crítico ([ADR-008](decisions.md)) |
+| `LOG_CHANNEL`, `LOG_STACK`, `LOG_LEVEL` | `stack`, `single`, `debug` | Registro em `storage/logs` |
+| `BROADCAST_CONNECTION`, `FILESYSTEM_DISK`, `MAIL_MAILER` | `log`, `local`, `log` | Nada sai da máquina em desenvolvimento |
+
+**Segredos que nunca são commitados:** `APP_KEY`, qualquer `DB_PASSWORD` real, tokens de Telegram,
+credenciais FCM e APNs, e o que vier em `.env.production`. O `.gitignore` cobre `.env` e
+`.env.*`, menos o `.env.example`, que só leva placeholders
+([security.md](security.md), seção de segredos e configuração).
 
 ## 4. Deploy
 

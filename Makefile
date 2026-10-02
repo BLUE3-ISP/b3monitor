@@ -10,7 +10,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help test verify lab-up lab-down demo acceptance-lab probe-doctor smoke \
+.PHONY: help test test-central test-agents verify lab-up lab-down demo acceptance-lab probe-doctor smoke \
         deploy-central pg-up pg-down pg-status docs-bundle
 
 # Arquivos do consolidado, na ordem de leitura 2.0 (PRECEDENCIA.md §1). O 02 vem do pacote
@@ -36,7 +36,7 @@ endef
 help: ## Lista os alvos e diz quais ainda não existem
 	@printf 'b3monitor — alvos de 02 §10. "não implementado" falha de propósito.\n\n'
 	@printf '  %-19s %s\n' \
-	  'test'            'Pest na central e go test nos agentes        [A6, A7, B1]' \
+	  'test'            'Pest na central (real) e go test (pulado até A7) [real]' \
 	  'verify'          'test + análise estática + contratos          [A8]' \
 	  'pg-up|down|status' 'PostgreSQL de dev isolado, porta 54329      [real]' \
 	  'lab-up|down'     'laboratório numa máquina só                  [B8]' \
@@ -47,8 +47,22 @@ help: ## Lista os alvos e diz quais ainda não existem
 	  'deploy-central'  'RECUSADO: exige autorização do dono          [nunca automático]' \
 	  'docs-bundle'     'consolidado em dist/ para colar em chat      [real]'
 
-test: ## Pest (central/) e go test (agents/)
-	$(call nao-implementado,central/ no item A6; agents/ no item A7; motor no item B1)
+test: test-central test-agents ## Pest (central/) e go test (agents/)
+
+test-central: ## Suíte Pest da central, no banco b3mon_test (exige make pg-up)
+	@test -x central/vendor/bin/pest || { printf 'central sem dependências: rode "composer install" em central/\n' >&2; exit 1; }
+	@bash lab/pg.sh status >/dev/null 2>&1 || { printf 'PostgreSQL de dev parado: rode "make pg-up"\n' >&2; exit 1; }
+	@cd central && ./vendor/bin/pest
+
+# ⚠️ Enquanto não houver módulo Go (item A7), a suíte dos agentes é PULADA, em voz alta, e
+# isso não é aprovação: 09 §6, "um teste ignorado não conta como aprovado". Com `go.mod`, roda.
+test-agents: ## go test nos módulos de agents/ (pulado, avisando, até o item A7)
+	@mods="$$(ls agents/*/go.mod 2>/dev/null)"; \
+	if [ -z "$$mods" ]; then \
+	  printf 'PULADO, NÃO APROVADO: agents/ ainda não tem módulo Go (item A7)\n' >&2; \
+	else \
+	  for m in $$mods; do d="$$(dirname $$m)"; echo "== go test $$d"; (cd "$$d" && go test ./...) || exit 1; done; \
+	fi
 
 verify: ## test + phpstan + go vet + validação dos contratos
 	$(call nao-implementado,item A8 (contratos) e os itens A6 e A7)
