@@ -357,6 +357,12 @@ máquina sem rede, como um runner de CI isolado, precisa dela já presente. O 1.
 das duas séries mantidas, e o 1.27 entra por novo ADR. Composer, git e make não foram verificados
 em fonte oficial. **Reverter:** trocar a linha `toolchain` e, se for o caso, instalar o Go à parte.
 
+**Medição de 02/10/2026 (item A7).** O custo que este ADR deixou como "não medido": o primeiro
+`go vet` com o `toolchain go1.26.8` baixou a toolchain em cerca de **10 s** e ela ocupa **235 MB**
+em `~/go/pkg/mod/golang.org/toolchain@…` (tamanho do download em si, não medido). O Go 1.24.4 da
+estação trocou de toolchain sozinho (`GOTOOLCHAIN=auto`), sem `sudo` e sem instalar nada à parte,
+como o ADR previa. Um runner de CI sem rede continua precisando da toolchain já presente.
+
 **Atualização de 02/10/2026 (item A6).** Ao criar a central, o `composer create-project` do
 Laravel 13 trouxe `pestphp/pest ^4.7` e `phpunit/phpunit ^12.5` já fixados no `composer.json`
 do esqueleto, e o `composer require pestphp/pest:^5.0` sozinho **falhou**: o Pest 5 exige o

@@ -19,7 +19,7 @@ Debian 13 (Trixie), sem Docker ([ADR-005](decisions.md)). Versões fixadas no
 | PHP | 8.4, com `pdo_pgsql`, `pgsql`, `intl`, `mbstring`, `openssl`, `curl`, `zip` e `bcmath` | A central |
 | Composer | 2.x | Dependências da central |
 | PostgreSQL | 17, com os binários em `/usr/lib/postgresql/17/bin` | O banco de desenvolvimento (`make pg-up`) |
-| Go | toolchain `go1.26.8`, baixada pelo próprio Go a partir do `go.mod` (item A7) | A sonda e o vigilante. **O primeiro `go test` baixa a toolchain pela rede** |
+| Go | toolchain `go1.26.8`, baixada pelo próprio Go a partir do `go.mod` | A sonda e o vigilante. **O primeiro comando `go` baixa a toolchain pela rede** (medido: cerca de 10 s e 235 MB em disco) |
 | Node | 24 | Só para compilar os assets do painel (item B9) |
 | `make`, `git` | os do sistema | Os comandos de [02 §10](../.continue/b3monitor_2.0/02_ARQUITETURA_E_STACK.md) |
 

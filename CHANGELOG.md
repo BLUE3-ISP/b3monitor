@@ -9,6 +9,29 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.14 - A7: os módulos Go da sonda e do vigilante, e o custo da toolchain, finalmente medido
+
+`agents/probe` e `agents/watchdog` viram módulos Go (`github.com/BLUE3-ISP/b3monitor/agents/…`) com
+`go 1.26.0` e `toolchain go1.26.8`, como o ADR-013 fixou. O vigilante tem **só o `go.mod`**, como o
+item pede. A sonda ganha o primeiro pacote real, `internal/relogio`: o relógio atrás de uma interface,
+com a versão do sistema (sempre UTC) e uma `Falso` que o teste avança, e até recua, à mão. É uma
+escolha com uso garantido: a agenda de slots absolutos e o frescor do B6 e do B1 dependem de "agora",
+e código que chama `time.Now()` direto não se testa.
+
+O ADR-013 deixava dois custos como "não medidos", e o primeiro `go vet` os mediu. A toolchain baixou
+em cerca de **10 s** e ocupa **235 MB** em `~/go/pkg/mod`; o Go 1.24.4 da estação trocou sozinho, sem
+`sudo`. O tamanho do download em si continua sem medida, e o ADR diz isso. Verificado: `go vet`,
+`gofmt` e `go test -race` limpos (quatro testes, incluindo uso concorrente), e `CGO_ENABLED=0 go
+build` passa, o que prova que o pacote já compila sem cgo; a prova para o **driver SQLite** segue
+sendo do B6, quando ele entrar.
+
+**O `make test` quebrou no meio e foi corrigido.** Um módulo com `go.mod` e nenhum pacote, que é o
+vigilante agora, faz o `go test ./...` sair com erro, e o alvo falhava por isso. Em vez de esconder,
+o alvo passa a pular esse módulo **dizendo que pulou** (`PULADO, NÃO APROVADO: agents/watchdog tem
+go.mod e nenhum pacote`), e roda o resto. Hoje o `make test` executa o Pest (3 testes) e o `go test`
+da sonda, e sai com 0. O `CLAUDE.md`, o `AGENTS.md` e o runbook perdem a frase de que os agentes
+ainda não existem.
+
 ## 0.1.13 - A6: a central nasce em central/, com Pest 5 verde e a rota de saúde
 
 `composer create-project` do Laravel 13 (13.34.0) em `central/`, sem os scripts do esqueleto, que
