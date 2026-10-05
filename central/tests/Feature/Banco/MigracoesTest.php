@@ -10,14 +10,14 @@ use Illuminate\Support\Facades\Schema;
 // O PostgreSQL tem DDL transacional, então tudo isto acontece dentro da transação do teste e é desfeito no fim.
 
 const TABELAS_DO_PRODUTO = ['results', 'result_receipts', 'ingestion_work', 'current_states', 'state_events', 'incidents',
-    'incident_events', 'notification_outbox', 'notification_attempts', 'audit_events'];
+    'incident_events', 'notification_outbox', 'notification_attempts', 'audit_events', 'probes', 'probe_credentials', 'assignments'];
 
-it('desce as três migrações, remove tudo o que elas criaram, e sobe de novo', function () {
+it('desce as quatro migrações, remove tudo o que elas criaram, e sobe de novo', function () {
     foreach (TABELAS_DO_PRODUTO as $tabela) {
         expect(Schema::hasTable($tabela))->toBeTrue($tabela);
     }
 
-    Artisan::call('migrate:rollback', ['--step' => 3, '--force' => true]);
+    Artisan::call('migrate:rollback', ['--step' => 4, '--force' => true]);
 
     foreach (TABELAS_DO_PRODUTO as $tabela) {
         expect(Schema::hasTable($tabela))->toBeFalse("$tabela deveria ter sido removida");

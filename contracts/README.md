@@ -31,13 +31,7 @@ upstream" (cruza com a configuração).
 
 1. **A validação de `format` precisa estar ligada.** É ela que verifica a família IP do INV-03. Uma
    biblioteca com `format` só como anotação aceita um IPv6 num assignment IPv4 sem reclamar.
-2. **Hoje nada no repositório valida contra os schemas.** Os testes (`tests/Unit/ContratosTest.php` na
-   central e `internal/contratos` na sonda) conferem a **estrutura**: JSON bem formado, `$ref` que
-   resolve, manifesto e disco em correspondência, toda fixture inválida dizendo a regra. A validação
-   de verdade depende de uma biblioteca em cada linguagem, e isso é decisão do dono
-   ([ADR-014](../docs/decisions.md), proposta). Até lá, a conferência foi feita **uma vez**, com
-   validadores descartáveis fora do repositório: as 44 fixtures batem com o manifesto em Go e em PHP, e
-   cada inválida falha pelo motivo declarado.
+2. **A validação de schema é código próprio, e não uma biblioteca.** Do lado PHP, o `BatchValidator` da ingestão (B3) é uma segunda implementação das regras do contrato, e o que o mantém fiel é o teste de conformidade: ele passa cada fixture `valido-*` de `result` e `batch` e exige que cada `invalido-*` seja recusada, com o `manifest.json` como oráculo. Do lado Go **ainda não há validador**: a sonda nasce no B6. Os testes estruturais (`tests/Unit/ContratosTest.php` na central e `internal/contratos` na sonda) conferem a estrutura: JSON bem formado, `$ref` que resolve, manifesto e disco em correspondência, toda inválida dizendo a regra. A biblioteca em cada linguagem é decisão do dono ([ADR-014](../docs/decisions.md), proposta). Além disso, a conferência foi feita uma vez com validadores descartáveis fora do repositório: as 44 fixtures batem com o manifesto em Go e em PHP, e cada inválida falha pelo motivo declarado.
 
 ## Acrescentar uma fixture
 

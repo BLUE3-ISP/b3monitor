@@ -9,6 +9,37 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.18 - B3: a ingestão durável, com o reenvio provado e a bomba de descompressão recusada
+
+`POST /api/v1/probe/results` autentica a sonda por token (só o SHA-256 fica no banco), lê o corpo respeitando os limites de
+transporte, valida o lote e grava cada resultado numa transação própria: o recibo no ledger, a linha em `results` e o item em
+`ingestion_work` entram **juntos ou não entram**. A promessa é que `accepted` só sai **depois do commit**: se a resposta se
+perde e a sonda reenvia, o reenvio é `duplicate`, sem segundo trabalho. Os outros destinos de um item são `conflict` (mesmo
+`result_id` ou mesma chave natural com outro conteúdo: a observação original não é sobrescrita e a divergência é auditada),
+`rejected_terminal` (mais velho que os 7 dias de aceitação) e `retryable` (falta de partição: a transação inteira volta,
+**sem recibo órfão**). Um lote com resultado de outra sonda, assignment alheio ou geração que não existe é recusado com `403`
+**inteiro**. As migrações ganharam uma quarta, com `probes`, `probe_credentials` e `assignments`, no mínimo que a ingestão exige.
+
+**A validação é código próprio, e isso é uma escolha com custo.** A biblioteca de JSON Schema está travada no ADR-014, e o plano
+que a fila registrou para esse caso era validar à mão. O `BatchValidator` é uma segunda implementação das regras do contrato, e
+o que o impede de divergir dele em silêncio é um teste de conformidade com as 44 fixtures como oráculo, mais uma versão ponta a
+ponta pelo endpoint. A decisão e como revertê-la estão na premissa 9 de `.loop/ASSUMPTIONS.md`. As mensagens de erro dizem o
+caminho e a regra, **nunca o valor recebido**: uma sonda não ganha o próprio dado de volta.
+
+**O teste do gzip achou um defeito real.** O `BodyReader` recusava um gzip **válido**, dizendo que estava truncado, o que teria
+quebrado todo envio comprimido: depois que o fluxo termina dentro do laço, perguntar de novo com `ZLIB_FINISH` devolve outro
+status. A correção checa o término a cada passo e passou a recusar também bytes sobrando depois do fim do fluxo. A bomba de
+descompressão (17 MiB de zeros, dezenas de KiB no fio) é contada **enquanto expande**, em pedaços de 4 KiB, porque o tamanho
+comprimido não previne a expansão.
+
+**Provado, e de novo duas vezes quase não foi.** 60 testes de ingestão e 164 no total, com as 1.149 asserções, todos pelo
+endpoint real e conferindo o banco depois. Estraguei o código de treze maneiras, e **quatro "escaparam" na primeira rodada, por
+culpa minha**: três usavam `->whereRaw('false')->insert(...)`, e o `insert` do Laravel ignora o `where`, então não mudavam nada;
+a do gzip trocava só uma das duas checagens do limite, e a outra continuava pegando. Refeitas com estragos que mudam o
+comportamento, as treze foram pegas. O que **não** está aqui: o motor não é acionado (o trabalho fica `pending` até os workers
+do B4), não há limite de taxa (`429`), e o cadastro de sondas é o mínimo, sem aprovação nem rotação (F0-05). O
+`docs/ingestao.md` diz tudo isso.
+
 ## 0.1.17 - B2: o banco da central, que recusa por si o que não pode existir
 
 Três migrações criam dez tabelas no PostgreSQL: `results` (particionada por dia de `started_at`, imutável),

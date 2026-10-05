@@ -17,6 +17,7 @@ ela impõe, e cada imposição tem um teste que a viola e confere o **SQLSTATE e
 | `results` | O payload normalizado, **imutável**, **particionado por dia** de `started_at` | UPDATE e DELETE recusados por gatilho; agendado tem `scheduled_at` e não tem `manual_request_id`, e manual é o inverso (06 §12); duração não negativa; fim depois do início; todo enum do glossário 14 em CHECK |
 | `result_receipts` | O **ledger de idempotência global**, sem partição, com `retain_until` próprio | `result_id` único; a chave natural `(sonda, assignment, geração, slot)` única **em todas as partições**; a chave de uma execução manual não colide com a de um slot agendado |
 | `ingestion_work` | Trabalho durável, consumido com `FOR UPDATE SKIP LOCKED` (D-04, item B4) | Um item por resultado; exige recibo; `processing` exige dono e validade do lease, e `done` exige a data de processamento |
+| `probes`, `probe_credentials`, `assignments` | O mínimo para a ingestão dizer "este lote é desta sonda": a credencial (só o SHA-256 do token), o status da sonda e a geração vigente de cada assignment | Nome de sonda único; token único; sonda `active`, `suspended` ou `revoked`; geração a partir de 1; família IP do glossário |
 | `current_states` | **Projeção** do estado por verificação × família IP: saúde, abrangência, cobertura, `as_of`, validade | Cobertura insuficiente ⇔ saúde `unknown` ⇔ abrangência `unknown` (INV-11: nada de "verde" com cobertura insuficiente); domínios válidos ≤ previstos |
 | `state_events` | Transições confirmadas, imutáveis | A mesma transição reprocessada não vira dois eventos; estado de origem diferente do de destino |
 | `incidents`, `incident_events` | O episódio e a sua linha do tempo | **Um incidente aberto por chave de correlação** (03 §7); detecção depois do início; reconhecimento exige autor; a linha do tempo é imutável e não existe "fechar como resolvido" à mão |
@@ -53,11 +54,14 @@ tabelas e **não** as funções.
 ## O que não está aqui
 
 Nomes e escolhas que diferem da fila: o ledger é `result_receipts` e a auditoria é `audit_events`, como diz o 06 §2
-(a fila dizia `ingestion_receipts` e `audit_log`). **Não existem** ainda: `probes`, `probe_credentials`, `assignments`
-e `checks` (B3 e F0-05), `replay_sessions` e `replay_parts` (F0-04), `maintenance_windows` e `silences` (F1-04),
-`devices` (F1-06), `measurement_aggregates` (F0-10) e `job_heartbeats` (F1-01). Por isso `results` e os recibos
-guardam `probe_id` e `assignment_id` **sem chave estrangeira**: não há tabela para apontar, e em `results` nem seria
-possível. As tabelas de usuário, cache e fila do esqueleto do Laravel continuam como vieram.
+(a fila dizia `ingestion_receipts` e `audit_log`). `probes`, `probe_credentials` e `assignments` existem **no mínimo** que
+a ingestão exige (B3); o cadastro completo, com aprovação, rotação e revogação por interface, é do F0-05. **Não existem**
+ainda: `checks` (F0-05), `replay_sessions` e `replay_parts` (F0-04), `maintenance_windows` e `silences` (F1-04), `devices`
+(F1-06), `measurement_aggregates` (F0-10) e `job_heartbeats` (F1-01). `results` e `result_receipts` guardam `probe_id` e
+`assignment_id` **sem chave estrangeira**: em `results` ela não é possível por ser particionada, e no ledger ficou de fora
+de propósito, para que a gravação do recibo nunca dependa de uma consulta ao cadastro. As tabelas de usuário, cache e fila
+do esqueleto do Laravel continuam como vieram.
+
 
 ## Como se prova
 

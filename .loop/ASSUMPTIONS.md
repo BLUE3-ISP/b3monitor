@@ -90,3 +90,18 @@ primeiras nasceram na preparação, em 29/09/2026, antes de o loop ser armado.
   chegada. **Descartada:** manter a primeira recebida. **Reverter:** exige um critério de desempate que o 03 não dá.
 - **Os motivos de inelegibilidade** (`stale`, `clock_untrusted`, …) são internos ao motor e ainda não fazem parte de
   nenhum contrato. Ao serem persistidos com a observação, precisam de ADR.
+
+## 9. A ingestão valida o lote com código próprio, guardado pelas fixtures do contrato (05/10/2026, item B3)
+
+- **Pergunta:** o B3 precisa validar o lote contra o schema, e as bibliotecas de JSON Schema estão `- 🔒` (ADR-014,
+  dependência nova). Esperar o dono ou seguir?
+- **Decisão:** seguir com um validador próprio, `App\Ingestion\BatchValidator`, **guardado pelas fixtures do contrato**:
+  um teste de conformidade passa cada `valido-*` de `contracts/fixtures/{result,batch}` e exige que cada `invalido-*` seja
+  recusado, com o manifesto como oráculo. É o plano que a própria fila registrou para o caso de o dono não aprovar o
+  ADR-014. Se um schema mudar e o validador não, o teste quebra.
+- **Descartada:** parar o B3 até o dono decidir, que bloquearia a F0-01 inteira; e validar sem as fixtures, que deixaria
+  o código divergir do contrato em silêncio.
+- **Reverter:** quando o dono aprovar as bibliotecas, trocar o corpo de `BatchValidator` pela biblioteca (`opis/json-schema`
+  com os schemas de `contracts/`). As fixtures e o teste de conformidade ficam: é por elas que se confere a troca.
+- **Custo conhecido:** o validador próprio é uma segunda implementação das regras do contrato, e as regras que cruzam
+  campos (família IP × IP efetivo, relógio desconhecido × offset, agendado × manual) foram escritas à mão.
