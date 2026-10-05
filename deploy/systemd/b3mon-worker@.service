@@ -2,9 +2,8 @@
 #
 #   systemctl enable --now b3mon-worker@ingest
 #
-# Só `ingest` tem handler hoje. `decide` e `notify` nascem no B5, e até lá `b3mon:work` RECUSA subir
-# nelas (sai com "não implementado"); NÃO habilite essas duas instâncias antes do B5, ou o
-# Restart=always as reinicia em laço.
+# As três filas têm handler (B4 e B5). `notify` só tem provedor para o canal `dev`, que é SIMULADO: um item de outro
+# canal (telegram, push, e-mail) falha e para como `dead`, e para esses é preciso configurar credenciais (decisão do dono).
 #
 # Endurecimento: 07 §10 do pacote 1.0 na versão 2.0 (C-07 da REVISAO). Medido com
 # `systemd-analyze security --offline=true` (ver README.md desta pasta).
@@ -57,7 +56,7 @@ UMask=0077
 # Sem nenhuma capability: o worker não escuta porta nem toca em rede privilegiada.
 CapabilityBoundingSet=
 AmbientCapabilities=
-# Banco por socket Unix ou TCP local, e saída para os provedores de notificação (B5).
+# Banco por socket Unix ou TCP local, e saída para os provedores de notificação (hoje só o `dev`, que escreve em arquivo).
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 SystemCallArchitectures=native
 SystemCallFilter=@system-service

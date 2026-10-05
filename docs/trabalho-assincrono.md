@@ -9,11 +9,10 @@
 | Fila | Tabela | Quem a alimenta | Quem a consome | Estado |
 |---|---|---|---|---|
 | `ingest` | `ingestion_work` | a ingestão, na mesma transação do recibo | `IngestHandler`: confere que o resultado está em `results` e enfileira a reavaliação do check | **existe** |
-| `decide` | `decision_work` | o `IngestHandler`, **coalescido**: no máximo um pedido pendente por (check, família IP) | o motor sobre o banco | **B5** |
-| `notify` | `notification_outbox` | a transição de estado, na mesma transação | o envio | **B5** |
+| `decide` | `decision_work` | o `IngestHandler`, **coalescido**: no máximo um pedido pendente por (check, família IP) | `DecideHandler`: o motor sobre o banco, o estado e o incidente ([incidentes-e-notificacao.md](incidentes-e-notificacao.md)) | **existe** (B5) |
+| `notify` | `notification_outbox` | a decisão, na mesma transação do incidente | `NotifyHandler`: a entrega pelo provedor do canal | **existe** (B5), só o canal `dev` |
 
-`b3mon:work decide` e `b3mon:work notify` **recusam subir** (`não implementado`, saída diferente de zero), em vez de
-consumir itens sem fazer nada com eles. A coalescência mora no banco (índice único parcial): um pedido já em
+A coalescência mora no banco (índice único parcial): um pedido já em
 processamento **não** impede o próximo, porque o resultado que chegou durante o processamento precisa de outra avaliação.
 
 ## O ciclo de vida de um item
@@ -62,11 +61,10 @@ mantém as partições de `results` (`b3mon:partitions`).
 
 ## O que não está aqui
 
-- **O motor sobre o banco** (`decide`) e **o envio** (`notify`): B5. O `decision_work` acumula pedidos coalescidos, no
-  máximo um pendente por (check, família), até lá.
 - **Expurgo de itens `done` e `dead`**: as três tabelas só crescem. Entra com o expurgo do F0-05.
 - **Efeito fora do banco com a mesma atomicidade.** O envio de notificação não cabe na transação; a idempotência dele é a
-  chave única `(incident_id, decision_version, reason, channel, recipient)` da outbox (B5).
+  chave única `(incident_id, decision_version, reason, channel, recipient)` da outbox, mais a chave de idempotência
+  `outbox-<id>` repassada ao provedor ([incidentes-e-notificacao.md](incidentes-e-notificacao.md)).
 - **O `available_at` de um item novo é o relógio do banco** (`now()`), não o injetado: só as operações da fila recebem o
   instante de fora.
 
@@ -79,5 +77,5 @@ conexões (`SKIP LOCKED` pula o que a outra segura; o `hold` tranca de fato, e a
 vez. **A suíte foi submetida a mutação:** 26 estragos que de fato mudam o comportamento (sem `SKIP LOCKED`, `hold` que
 não confere o dono ou não tranca, `finish` e `fail` sem conferir o dono, reconciliador que ignora a validade da lease ou
 nunca para o item, worker fora da transação, coalescência ou resultado ausente ignorados, handler de `decide` antes da
-hora…) derrubaram, **cada um, pelo menos um teste**. Quatro escaparam na primeira rodada (`hold` sem dono, `hold` sem
+hora…) derrubaram, **cada um, pelo menos um teste** (a lista é a do B4; a do B5 está no outro documento). Quatro escaparam na primeira rodada (`hold` sem dono, `hold` sem
 lock, coalescência, reconciliação do comando) e ganharam teste antes de o item fechar.

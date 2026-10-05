@@ -33,15 +33,22 @@ it('b3mon:work --once com a fila vazia sai sem erro', function () {
     $this->artisan('b3mon:work', ['fila' => 'ingest', '--once' => true])->assertSuccessful();
 });
 
-it('recusa subir uma fila cujo handler ainda não existe, em vez de consumir sem fazer nada', function (string $fila) {
-    $item = Trabalho::pendente(Fila::from($fila));
+it('as três filas têm worker: com a fila vazia cada uma sobe, não acha nada e sai sem erro', function (string $fila) {
+    $this->artisan('b3mon:work', ['fila' => $fila, '--once' => true])->assertSuccessful();
+})->with(['ingest', 'decide', 'notify']);
 
-    $this->artisan('b3mon:work', ['fila' => $fila, '--once' => true])
-        ->expectsOutputToContain('não implementado')
-        ->assertFailed();
+it('b3mon:work decide --once roda o motor sobre o pedido: a decisão acontece pelo comando de verdade', function () {
+    $s = Tests\Support\Decisao::sondas();
+    Tests\Support\Decisao::ambas($s, 0, 2, 'fail');
+    DB::table('decision_work')->insert(['check_id' => Tests\Support\Banco::CHECK, 'ip_family' => 'ipv4']);
 
-    expect(DB::table(Fila::from($fila)->table())->where('id', $item->id)->value('status'))->toBe('pending');
-})->with(['decide', 'notify']);
+    // O comando usa o relógio REAL: os resultados de 2026-09-28 estão velhos, e o presente é `unknown`. O que importa aqui é
+    // que o comando consumiu o pedido e gravou a projeção.
+    $this->artisan('b3mon:work', ['fila' => 'decide', '--once' => true])->assertSuccessful();
+
+    expect(DB::table('decision_work')->value('status'))->toBe('done')
+        ->and(DB::table('current_states')->value('health'))->toBe('unknown');
+});
 
 it('recusa uma fila que não existe', function () {
     $this->artisan('b3mon:work', ['fila' => 'tabela; drop table results', '--once' => true])->assertFailed();

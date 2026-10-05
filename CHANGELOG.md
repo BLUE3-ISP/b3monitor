@@ -9,6 +9,36 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.20 - B5: a decisão abre e fecha o incidente pela confirmação sustentada, grava a intenção na mesma transação, e o replay não gera tempestade
+
+Com os workers do B4, falta o que eles processam: o motor sobre o banco, o incidente e o aviso. O B5 liga as pontas.
+
+- **`decide`** (`Decider`): um lock consultivo por verificação, leitura das perspectivas (sonda ativa) e das observações agendadas
+  da janela, o `Engine` puro, a projeção em `current_states` (versão só sobe com mudança material) e `state_events` (com a data
+  **original** do slot), e o incidente. Tudo na transação do passo do worker.
+- **O incidente** (`IncidentManager`) olha só o **presente**: `down` ou `degraded` abre, `up` fecha, `unknown` não faz nada
+  (nunca um verde antigo). Início observado é a primeira falha do episódio, e a detecção é a avaliação: duas coisas distintas.
+  Avisa a abertura, o **agravamento** e a recuperação (esta só se a queda foi avisada).
+- **A outbox** (`Notifier`): uma intenção por destinatário na mesma transação, com a unicidade
+  `(incident_id, decision_version, reason, channel, recipient)`. O **canal `dev` é simulado** (escreve em
+  `storage/logs/notifications-dev.log` com `[SIMULADO]`, sem token) e o banco o identifica (`simulated` é coluna gerada).
+  A entrega é **pelo menos uma vez**, dita assim: a repetição leva a mesma chave de idempotência. Canal sem provedor falha e
+  para como `dead`, em vez de sumir.
+- **Sem tempestade de replay.** Cem amostras antigas recompõem o histórico e geram **zero** notificações (o presente delas é
+  `unknown`); uma queda ainda em curso que chega em replay abre **um** incidente e avisa **uma vez**.
+
+**O teste de replay achou um defeito real.** Uma avaliação feita "no passado" depois de o incidente ter fechado o **reabria** e
+avisava uma queda que já tinha acabado (dois pedidos fora de ordem bastam). O `Decider` agora descarta a avaliação mais velha que
+a projeção atual.
+
+**Medido.** 250 testes, 1.759 asserções. A prova do item passa pelo caminho inteiro (ingestão → `ingest` → `decide` → outbox).
+**Mutação à mão: 36 estragos, cinco escaparam na primeira rodada** (a versão que não sobe quando só a cobertura muda, a outbox
+sem dedup, a janela de histórico, a família do resultado, e o filtro de execução agendada, que eu tinha julgado equivalente e
+não é: o canário pode trazer horário agendado). Cada um ganhou teste, e na segunda rodada os 36 foram pegos.
+
+**Não está aqui, e `docs/incidentes-e-notificacao.md` diz o que e por quê:** reabertura por recaída, instabilidade e integridade
+persistente (F0-04); reconstruir incidente totalmente passado; avisar perda de cobertura; canais reais (dependem de
+credenciais do dono); silêncio e manutenção. As escolhas sem decisão do dono estão em `.loop/ASSUMPTIONS.md` §10.
 ## 0.1.19 - B4: workers com lease e reconciliador, e o worker morto no meio não perde nem duplica o resultado
 
 A ingestão (B3) deixava o item em `ingestion_work` esperando, e nada o consumia. Este é o consumidor, com o que o

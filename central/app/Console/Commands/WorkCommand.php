@@ -39,15 +39,8 @@ final class WorkCommand extends Command
             return self::INVALID;
         }
 
-        $classe = $fila->handler();
-        if ($classe === null) {
-            // Recusar é mais honesto que subir e consumir itens sem fazer nada com eles.
-            $this->error("não implementado: o worker da fila `{$fila->value}` nasce no item {$fila->pendingItem()} da fila do loop.");
-
-            return self::FAILURE;
-        }
         /** @var Handler $handler */
-        $handler = app($classe);
+        $handler = app($fila->handler());
 
         $this->instalarSinais();
 

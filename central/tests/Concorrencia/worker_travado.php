@@ -15,6 +15,7 @@ use App\Work\Handler;
 use App\Work\WorkQueue;
 use App\Work\Worker;
 use Carbon\CarbonImmutable;
+use DateTimeImmutable;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +35,7 @@ $handler = new class($pronto) implements Handler
 {
     public function __construct(private readonly string $pronto) {}
 
-    public function handle(stdClass $item): void
+    public function handle(stdClass $item, DateTimeImmutable $now): void
     {
         DB::insert('insert into efeitos_teste (item_id, quem) values (?, ?)', [$item->id, 'travado']);
         file_put_contents($this->pronto, 'pronto');

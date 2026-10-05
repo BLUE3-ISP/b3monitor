@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Work;
 
+use DateTimeImmutable;
 use stdClass;
 
 /**
@@ -17,6 +18,9 @@ use stdClass;
  */
 interface Handler
 {
-    /** @param  stdClass  $item  a linha da fila, como `claim()` a devolveu */
-    public function handle(stdClass $item): void;
+    /**
+     * @param  stdClass  $item  a linha da fila, como `claim()` a devolveu
+     * @param  DateTimeImmutable  $now  o instante do passo, vindo de FORA: o que decide expira ou não é determinístico
+     */
+    public function handle(stdClass $item, DateTimeImmutable $now): void;
 }

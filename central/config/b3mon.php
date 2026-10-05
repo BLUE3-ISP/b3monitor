@@ -25,6 +25,24 @@ return [
         'days_behind' => (int) env('B3MON_PARTITION_DAYS_BEHIND', 1),
     ],
 
+    // A decisão (B5): quanto histórico o motor lê para avaliar um check. Tem de cobrir várias vezes o frescor (132 s no perfil
+    // crítico); o que está fora da janela não entra na avaliação.
+    'decide' => [
+        'window_s' => (int) env('B3MON_DECIDE_WINDOW_S', 3600),
+    ],
+
+    // Notificação (B5). Só o canal `dev` existe: ele é SIMULADO (escreve num arquivo) e não usa credencial. Telegram, push e
+    // e-mail dependem de credenciais do dono e não têm provedor: um item para esses canais falha e para como `dead`.
+    'notifications' => [
+        // Para quem cada decisão gera uma intenção.
+        'destinations' => [
+            ['channel' => 'dev', 'recipient' => 'lab'],
+        ],
+        'providers' => [
+            'dev' => \App\Notifications\DevLogProvider::class,
+        ],
+        'dev_log_path' => env('B3MON_DEV_LOG_PATH', storage_path('logs/notifications-dev.log')),
+    ],
     // Workers das filas ingest/decide/notify (D-04; B4). Parâmetros iniciais, não SLA.
     'work' => [
         // Quanto um worker pode ficar com um item antes de o reconciliador devolvê-lo à fila.

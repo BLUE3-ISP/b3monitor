@@ -105,3 +105,21 @@ primeiras nasceram na preparação, em 29/09/2026, antes de o loop ser armado.
   com os schemas de `contracts/`). As fixtures e o teste de conformidade ficam: é por elas que se confere a troca.
 - **Custo conhecido:** o validador próprio é uma segunda implementação das regras do contrato, e as regras que cruzam
   campos (família IP × IP efetivo, relógio desconhecido × offset, agendado × manual) foram escritas à mão.
+
+## 10. Escolhas da decisão e da notificação sem decisão do dono (05/10/2026, item B5)
+
+- **Pergunta:** o 03 deixa em aberto o que uma decisão faz em casos que o B5 tem de resolver para existir. Esperar o dono
+  ou seguir?
+- **Decisão:** seguir, com as escolhas abaixo, todas reversíveis por código e registradas em `docs/incidentes-e-notificacao.md`.
+  1. **Gravidade:** `down` é `critical` e `degraded` é `warning`. O 03 não mapeia.
+  2. **Quem avisa:** abertura, **agravamento** (`warning` → `critical`) e recuperação **só se a abertura foi avisada**. Alívio
+     (`critical` → `warning`) atualiza a linha do tempo e fica quieto.
+  3. **Presente `unknown` não fecha nem repete:** com incidente aberto e a evidência sumida, nada muda.
+  4. **A decisão olha só o presente.** Incidente que começou e terminou inteiramente no passado fica só em `state_events`, sem
+     linha em `incidents` (03 §9.3 pede a recomposição; fica para o F0-04).
+  5. **Avaliação mais velha que a projeção atual é descartada**, para o estado nunca regredir.
+  6. **Destinatários:** só `dev`/`lab`. Os canais reais dependem de credenciais do dono (`- 🔒`).
+  7. **Perfil de política fixo** (`critical-v1`) e janela de histórico de 1 hora.
+- **Descartada:** abrir incidente histórico para toda queda recomposta pelo replay (viraria aviso de coisa que já acabou, o
+  oposto do que o item pede); e avisar a perda de cobertura já no B5 (exige decidir a classe `monitoring_coverage`, F0-04).
+- **Reverter:** cada escolha mora numa função pequena de `IncidentManager`/`Decider`, com teste que a trava.

@@ -180,3 +180,23 @@ it('WORKER MORTO no meio (SIGKILL de verdade): o efeito some, o item não se per
         ->and($w->step(Fila::Ingest, $h, 'worker-vivo', $depois->modify('+2 seconds')))->toBe(Resultado::Ocioso)
         ->and(efeitos())->toBe(['vivo:'.$item->id]);
 });
+
+it('a decisão do MESMO check é serializada: com o lock consultivo ocupado por outra conexão, a decisão espera (e não duplica)', function () {
+    $outra = outraConexao();
+    $outra->beginTransaction();
+    $outra->selectOne('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', ['decide:'.Tests\Support\Banco::CHECK.':ipv4']);
+    DB::statement("set lock_timeout = '500ms'");
+
+    $codigo = null;
+    try {
+        app(App\Decision\Decider::class)->decide(Tests\Support\Banco::CHECK, 'ipv4', Trabalho::t());
+    } catch (Illuminate\Database\QueryException $e) {
+        $codigo = $e->getCode();
+    } finally {
+        $outra->rollBack();
+        DB::statement('RESET lock_timeout');
+    }
+
+    // 55P03 = lock_not_available: a decisão ficou ESPERANDO a outra, em vez de correr em paralelo.
+    expect($codigo)->toBe('55P03');
+});

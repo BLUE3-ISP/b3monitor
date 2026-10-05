@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Work;
 
+use App\Work\Handlers\DecideHandler;
 use App\Work\Handlers\IngestHandler;
+use App\Work\Handlers\NotifyHandler;
 
 /**
  * As três filas de trabalho da central (02 §7 do 2.0; D-04). O nome da tabela vem DAQUI, de uma lista fechada, e
@@ -27,25 +29,16 @@ enum Fila: string
     }
 
     /**
-     * Quem processa um item desta fila, ou `null` quando ainda não existe.
+     * Quem processa um item desta fila.
      *
-     * `decide` (o motor sobre o banco) e `notify` (o envio) nascem no B5, que também grava a transição de estado e
-     * a intenção de notificar na mesma transação. Até lá o worker dessas filas RECUSA subir, em vez de consumir
-     * itens e não fazer nada com eles.
-     *
-     * @return class-string<Handler>|null
+     * @return class-string<Handler>
      */
-    public function handler(): ?string
+    public function handler(): string
     {
         return match ($this) {
             self::Ingest => IngestHandler::class,
-            self::Decide, self::Notify => null,
+            self::Decide => DecideHandler::class,
+            self::Notify => NotifyHandler::class,
         };
-    }
-
-    /** O item da fila que falta implementar, para a mensagem de recusa. */
-    public function pendingItem(): string
-    {
-        return 'B5';
     }
 }

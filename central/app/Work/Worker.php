@@ -45,7 +45,7 @@ final class Worker
                 if (! $this->queue->hold($fila, (int) $item->id, $owner)) {
                     throw new LeaseLost("A lease do item {$item->id} não é mais deste worker.");
                 }
-                $handler->handle($item);
+                $handler->handle($item, $now);
                 if (! $this->queue->finish($fila, (int) $item->id, $owner, $now)) {
                     throw new LeaseLost("Não foi possível concluir o item {$item->id}: a lease mudou.");
                 }

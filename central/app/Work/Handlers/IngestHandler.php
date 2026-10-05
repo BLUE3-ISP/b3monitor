@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Work\Handlers;
 
 use App\Work\Handler;
+use DateTimeImmutable;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use stdClass;
@@ -21,7 +22,7 @@ use stdClass;
  */
 final class IngestHandler implements Handler
 {
-    public function handle(stdClass $item): void
+    public function handle(stdClass $item, DateTimeImmutable $now): void
     {
         // O recibo prometeu "durável". Se o resultado não está em `results`, há um defeito, e a resposta é falhar
         // alto (o item tenta de novo e, esgotadas as tentativas, para como `dead`) em vez de pular em silêncio.

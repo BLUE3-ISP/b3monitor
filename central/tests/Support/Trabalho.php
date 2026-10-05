@@ -81,7 +81,7 @@ final class Trabalho
 
             public function __construct(private readonly mixed $acao) {}
 
-            public function handle(stdClass $item): void
+            public function handle(stdClass $item, DateTimeImmutable $now): void
             {
                 $this->itens[] = (int) $item->id;
                 if ($this->acao !== null) {

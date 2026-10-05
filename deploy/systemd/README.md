@@ -12,8 +12,8 @@
 | Instância | Estado | Por quê |
 |---|---|---|
 | `b3mon-worker@ingest` | **pode** | Tem handler (B4): transforma o resultado aceito num pedido de avaliação |
-| `b3mon-worker@decide` | **ainda não** | O motor sobre o banco nasce no B5. Até lá `b3mon:work decide` **recusa subir** (`não implementado`), e o `Restart=always` o reiniciaria em laço |
-| `b3mon-worker@notify` | **ainda não** | O envio nasce no B5, pelo mesmo motivo |
+| `b3mon-worker@decide` | **pode** | Roda o motor sobre o banco, projeta o estado e decide o incidente (B5) |
+| `b3mon-worker@notify` | **pode, e só `dev`** | Entrega a outbox. O único provedor é o `dev` (**simulado**: escreve em `storage/logs/notifications-dev.log`). Um item de telegram, push ou e-mail **falha e para como `dead`**, porque esses canais dependem de credenciais do dono |
 
 ## O cron do scheduler
 
