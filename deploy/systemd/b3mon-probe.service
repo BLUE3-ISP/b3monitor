@@ -1,0 +1,61 @@
+# A sonda (B7b): o coordenador e o executor nativo embutido. O executor também pode rodar como processo separado
+# (`b3mon-probe executor -socket ...`), num namespace de rede próprio: isso é do F0-06.
+#
+#   install -m 0600 -o b3mon-probe -g b3mon-probe token /etc/b3mon-probe/token     # a credencial; NUNCA no probe.json
+#   systemctl enable --now b3mon-probe
+#
+# Endurecimento da C-07. A sonda só escreve em /var/lib/b3mon-probe (o spool e a última configuração válida).
+[Unit]
+Description=b3monitor sonda
+Documentation=file:///opt/b3mon-probe/docs/sonda.md
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=b3mon-probe
+Group=b3mon-probe
+ExecStart=/opt/b3mon-probe/bin/b3mon-probe run -config /etc/b3mon-probe/probe.json
+# SIGTERM: o passo em andamento termina e o spool é fechado. 60 s cobrem o pior passo (timeout do alvo + envio).
+KillSignal=SIGTERM
+TimeoutStopSec=60
+Restart=always
+RestartSec=2
+StateDirectory=b3mon-probe
+StateDirectoryMode=0700
+
+# ---- Endurecimento ----
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ReadWritePaths=/var/lib/b3mon-probe
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RemoveIPC=yes
+UMask=0077
+# Sem nenhuma capability: o executor é TCP, sem ICMP cru (ICMP é do F0-03, com a capacidade mínima demonstrada).
+CapabilityBoundingSet=
+AmbientCapabilities=
+# Saída para a central e para os alvos (IPv4 e IPv6); AF_UNIX para o socket do executor.
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM
+MemoryDenyWriteExecute=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -46,6 +46,9 @@ type Central struct {
 	chamadas   int
 	heartbeats []json.RawMessage
 	gzipOK     int
+	ordem      []string
+	bundle     []byte
+	configs    int
 }
 
 // Nova cria e inicia a central falsa. Fechar com `Close`.
@@ -92,6 +95,22 @@ func (c *Central) TemResultado(id string) bool {
 	return ok
 }
 
+// Corpo devolve o conteúdo (JSON) do i-ésimo resultado gravado, na ordem de chegada.
+func (c *Central) Corpo(i int) string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if i < 0 || i >= len(c.ordem) {
+		return ""
+	}
+	return string(c.recebidos[c.ordem[i]])
+}
+
+// DefinirBundle escolhe o corpo que `GET /api/v1/probe/config` devolve (nulo = 503).
+func (c *Central) DefinirBundle(b []byte) { c.mu.Lock(); c.bundle = b; c.mu.Unlock() }
+
+// Configs é quantas vezes o bundle foi pedido.
+func (c *Central) Configs() int { c.mu.Lock(); defer c.mu.Unlock(); return c.configs }
+
 // LotesGzip é quantos lotes chegaram comprimidos e foram descomprimidos com sucesso.
 func (c *Central) LotesGzip() int { c.mu.Lock(); defer c.mu.Unlock(); return c.gzipOK }
 
@@ -108,6 +127,21 @@ func (c *Central) Heartbeats() []json.RawMessage {
 func (c *Central) tratar(w http.ResponseWriter, r *http.Request) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+
+	if r.URL.Path == "/api/v1/probe/config" && r.Method == http.MethodGet {
+		if r.Header.Get("Authorization") != "Bearer "+c.token {
+			http.Error(w, `{"error":"unauthorized"}`, http.StatusUnauthorized)
+			return
+		}
+		c.configs++
+		if c.bundle == nil {
+			http.Error(w, `{"error":"unavailable"}`, http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(c.bundle)
+		return
+	}
 
 	if r.URL.Path == "/api/v1/probe/heartbeat" {
 		if r.Header.Get("Authorization") != "Bearer "+c.token {
@@ -188,6 +222,7 @@ func (c *Central) tratar(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 				c.recebidos[id] = append([]byte(nil), raw...)
+				c.ordem = append(c.ordem, id)
 				item["status"], item["durable"] = "accepted", true
 			}
 		}

@@ -5,6 +5,7 @@
 
 | Arquivo | O que é |
 |---|---|
+| `b3mon-probe.service` | **A sonda** (B7b): o coordenador com o executor embutido. Endurecida como o worker (exposição 1.2 OK no `security --offline`), com `StateDirectory` para o spool e a última configuração. A credencial vai num arquivo à parte, `0600` |
 | `b3mon-worker@.service` | Unit **modelo** do worker de uma fila. A instância é a fila: `b3mon-worker@ingest`, `@decide`, `@notify` (02 §7 do 2.0). Roda `php artisan b3mon:work <fila>` |
 
 ## Quais instâncias habilitar

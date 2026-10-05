@@ -381,3 +381,35 @@ func TestSucessoZeraOContadorDeFalhasEOBackoffRecomeca(t *testing.T) {
 		t.Fatalf("o backoff devia recomeçar em 1 s: %v", got)
 	}
 }
+
+func TestBuscarBundle(t *testing.T) {
+	a := novo(t)
+	cli := &Cliente{Base: a.c.URL(), Token: "segredo"}
+	ctx := context.Background()
+
+	// Sem bundle na central: 503, e o erro diz o status (quem chamou decide se usa o que tem em disco).
+	_, err := cli.BuscarBundle(ctx)
+	var el *ErroDeLote
+	if !errors.As(err, &el) || el.Status != http.StatusServiceUnavailable {
+		t.Fatalf("esperava 503: %v", err)
+	}
+
+	// Credencial errada: 401, e nada do corpo vaza como bundle.
+	a.c.DefinirBundle([]byte(`{"ok":true}`))
+	_, err = (&Cliente{Base: a.c.URL(), Token: "errado"}).BuscarBundle(ctx)
+	if !errors.As(err, &el) || el.Status != http.StatusUnauthorized {
+		t.Fatalf("esperava 401: %v", err)
+	}
+
+	// 200: devolve os bytes, sem interpretar.
+	got, err := cli.BuscarBundle(ctx)
+	if err != nil || string(got) != `{"ok":true}` {
+		t.Fatalf("%q %v", got, err)
+	}
+
+	// Acima de 4 MiB: erro, em vez de ler sem limite.
+	a.c.DefinirBundle([]byte(strings.Repeat("x", 5<<20)))
+	if _, err := cli.BuscarBundle(ctx); err == nil {
+		t.Fatal("um bundle de 5 MiB devia ser recusado")
+	}
+}

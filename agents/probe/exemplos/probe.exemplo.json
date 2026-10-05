@@ -1,0 +1,13 @@
+{
+  "probe_id": "00000000-0000-4000-8000-000000000000",
+  "central_url": "https://central.exemplo.invalido",
+  "token_file": "/etc/b3mon-probe/token",
+  "policy_file": "/etc/b3mon-probe/politica.json",
+  "spool_path": "/var/lib/b3mon-probe/spool.db",
+  "bundle_cache_path": "/var/lib/b3mon-probe/bundle.json",
+  "step_interval_ms": 1000,
+  "heartbeat_interval_s": 30,
+  "config_refresh_interval_s": 60,
+  "clock": { "status": "unknown", "offset_ms": null, "reference_kind": "none" },
+  "capabilities": { "ipv4": "unknown", "ipv6": "unknown", "icmp": "unknown" }
+}

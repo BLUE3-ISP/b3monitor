@@ -313,6 +313,34 @@ func novoUUID() string {
 		binary.BigEndian.Uint16(b[6:8]), binary.BigEndian.Uint16(b[8:10]), b[10:])
 }
 
+// BuscarBundle pede a configuração desta sonda (`GET /api/v1/probe/config`). Devolve os BYTES, e quem os lê (`bundle.Ler`) decide se
+// valem: este método não interpreta nada. A identidade vem da credencial; não há parâmetro para pedir o bundle de outra sonda.
+func (c *Cliente) BuscarBundle(ctx context.Context) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(c.Base, "/")+"/api/v1/probe/config", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", "Bearer "+c.Token)
+	cli := c.HTTP
+	if cli == nil {
+		cli = &http.Client{Timeout: 30 * time.Second}
+	}
+	resp, err := cli.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("transporte: %w", err)
+	}
+	defer resp.Body.Close()
+	dados, _ := io.ReadAll(io.LimitReader(resp.Body, 4<<20+1))
+	if resp.StatusCode != http.StatusOK {
+		return nil, &ErroDeLote{Status: resp.StatusCode, RetryAfter: retryAfter(resp), Corpo: resumo(dados)}
+	}
+	if len(dados) > 4<<20 {
+		return nil, fmt.Errorf("o bundle passa de 4 MiB")
+	}
+	return dados, nil
+}
+
 // EnviarHeartbeat manda o autodiagnóstico (`POST /api/v1/probe/heartbeat`). É um sinal de saúde, não um resultado: não passa pelo
 // spool, e uma falha aqui não bloqueia nada. O corpo é o que o coordenador montou; este método só o transporta.
 func (c *Cliente) EnviarHeartbeat(ctx context.Context, corpo any) error {

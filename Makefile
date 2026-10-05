@@ -37,6 +37,7 @@ help: ## Lista os alvos e diz quais ainda não existem
 	@printf 'b3monitor — alvos de 02 §10. "não implementado" falha de propósito.\n\n'
 	@printf '  %-19s %s\n' \
 	  'test'            'Pest na central e go test nos agentes          [real]' \
+	  'build-probe'     'compila o binário da sonda em agents/probe/bin [real]' \
 	  'verify'          'test + vet; FALHA até a validação de schema  [A8b]' \
 	  'pg-up|down|status' 'PostgreSQL de dev isolado, porta 54329      [real]' \
 	  'lab-up|down'     'laboratório numa máquina só                  [B8]' \
@@ -73,6 +74,11 @@ test-agents: ## go test em cada módulo de agents/ (pulado, avisando, se não ho
 # ⚠️ `verify` FALHA de propósito até o item A8b: ele roda o que existe (testes, go vet, composer
 # validate) e termina dizendo, com erro, que a validação de payload contra os schemas não foi feita.
 # Sem isso um `make verify` verde afirmaria uma verificação que ninguém fez.
+build-probe: ## Compila o binário da sonda em agents/probe/bin (não versionado)
+	@mkdir -p agents/probe/bin
+	@cd agents/probe && go build -trimpath -ldflags "-X main.versao=$$(head -1 ../../version.md | tr -d '[:space:]') -X main.commit=$$(git rev-parse --short HEAD 2>/dev/null || echo unknown)" -o bin/b3mon-probe ./cmd/b3mon-probe
+	@./agents/probe/bin/b3mon-probe version
+
 verify: test ## test + go vet + composer validate; a validação de schema é o item A8b
 	@for m in $$(ls agents/*/go.mod 2>/dev/null); do d="$$(dirname $$m)"; \
 	  if [ -z "$$(cd "$$d" && go list ./... 2>/dev/null)" ]; then \
