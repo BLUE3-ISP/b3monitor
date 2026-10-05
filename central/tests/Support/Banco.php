@@ -81,6 +81,25 @@ final class Banco
         return $id;
     }
 
+    /** Uma definição de verificação HTTP (a que o bundle leva à sonda). @param  array<string, mixed>  $sobrepor */
+    public static function check(array $sobrepor = []): string
+    {
+        $id = $sobrepor['id'] ?? self::CHECK;
+        DB::table('checks')->insert(array_merge([
+            'id' => $id,
+            'name' => 'portal-lab',
+            'kind' => 'http',
+            'target' => json_encode(['url' => 'https://portal.monitor.example/health', 'method' => 'GET', 'allowed_status_codes' => [200], 'follow_redirects' => false]),
+            'interval_s' => 30,
+            'timeout_ms' => 5000,
+            'start_tolerance_ms' => 6000,
+            'schedule_epoch' => '2026-09-28T14:00:00Z',
+            'policy_revision' => 'critical-v1',
+        ], $sobrepor));
+
+        return $id;
+    }
+
     /** @param  array<string, mixed>  $sobrepor */
     public static function recibo(array $sobrepor = []): string
     {

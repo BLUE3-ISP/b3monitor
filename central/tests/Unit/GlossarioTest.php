@@ -31,6 +31,7 @@ it('mantém os enums do banco idênticos aos do contrato', function (string $met
     'reason_code' => ['reasonCode', 'reason_code'],
     'integridade' => ['integrity', 'integrity'],
     'estado do relógio' => ['clockStatus', 'clock_status'],
+    'espécie de verificação' => ['checkKind', 'check_kind'],
 ]);
 
 it('monta a lista de um CHECK com aspas escapadas', function () {

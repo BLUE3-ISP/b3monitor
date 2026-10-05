@@ -9,7 +9,38 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
-## 0.1.22 - B7: o executor HTTP nativo, em que o IP validado é o IP conectado, e o rebinding não tem onde acontecer
+## 0.1.23 - B7b: o binário da sonda e os dois endpoints da central que faltavam, o bundle e o heartbeat
+
+O laboratório do B8 não existe sem estes dois pontos: a sonda tinha o coordenador e o executor, mas não era um processo, e a central
+não tinha como entregar a configuração nem receber o autodiagnóstico.
+
+**Na central.**
+- `GET /api/v1/probe/config`: o bundle **da sonda autenticada**, só dela (a identidade vem da credencial; `?probe_id=` é ignorado), sem
+  política local de redes (INV-09). A `bundle_revision` é monótona e **sobe por gatilho do banco**: assignment inserido, removido ou
+  atualizado, ou mudança no check que a sonda executa. Jitter determinístico por assignment e geração, até 10% do intervalo.
+- `POST /api/v1/probe/heartbeat`: valida contra o contrato, recusa o de **outra** sonda (403), guarda o estado atual com o **desvio de
+  relógio com sinal**, e não vira incidente. Migração nova: `checks` (a definição da verificação), `probe_status` e `probes.bundle_revision`.
+- `HeartbeatValidator` (com as primitivas extraídas do `BatchValidator` para o trait `ValidaContrato`), guardado pelo manifesto das fixtures
+  **e** por um teste por regra.
+
+**Na sonda.** `b3mon-probe run|executor|version` (`make build-probe`): lê a configuração local em modo estrito e o token de um arquivo `0600`
+(que nunca vai a log), reconcilia na partida, busca o bundle na central (ou usa o último válido em disco; um bundle recusado **não**
+sobrescreve o bom), roda o laço e **termina limpo em SIGTERM**: o sinal só é olhado entre os passos, então a medição em andamento é
+finalizada e entregue. Unit systemd endurecida (`b3mon-probe.service`).
+
+**O que o binário de verdade achou.** A primeira versão cancelava o passo em curso no SIGTERM e saía com erro (`agenda: context canceled`),
+deixando o slot `executando` à toa. O teste com o processo compilado e o relógio real pegou; agora o passo termina antes de sair.
+
+**Medido.** Central: 352 testes, 2.466 asserções. Sonda: 139 testes, `-race` limpo, e o **binário real** subindo, medindo, entregando e parando
+com código 0. **Mutação à mão: 35 estragos na central (sete escaparam na primeira rodada: a família IP do bundle e seis regras do validador que
+só as fixtures exercitavam) e 31 na sonda (um equivalente).** Um defeito do **método**: o cache do `go test` devolvia `ok` para um binário
+quebrado pela mutação, e um padrão de várias linhas casava no `grep` sem casar no `perl` (o mutante não existia). Os scripts passaram a
+usar `-count=1` e a conferir que o estrago foi aplicado; os três "equivalentes" anteriores foram refeitos assim e continuam equivalentes.
+
+**Não está aqui:** o cadastro administrativo de checks e assignments (F0-05; o B8 semeia por comando), referência externa de relógio (a sonda
+usa o relógio **declarado** no arquivo, e o laboratório o declara como `lab_declared`), e a prova do encontro entre a sonda e a central de
+verdade, que é o laboratório (B8).
+ o executor HTTP nativo, em que o IP validado é o IP conectado, e o rebinding não tem onde acontecer
 
 A sonda agora mede. O desenho que sustenta a defesa está em `docs/executor-http.md`, e cabe numa frase: **a resolução de nomes
 acontece dentro do `DialContext`, uma vez por conexão, e o que foi resolvido ali é validado e discado ali.** Não há um segundo

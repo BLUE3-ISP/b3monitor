@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Schema;
 // O PostgreSQL tem DDL transacional, então tudo isto acontece dentro da transação do teste e é desfeito no fim.
 
 const TABELAS_DO_PRODUTO = ['results', 'result_receipts', 'ingestion_work', 'current_states', 'state_events', 'incidents',
-    'incident_events', 'decision_work', 'notification_outbox', 'notification_attempts', 'audit_events', 'probes', 'probe_credentials', 'assignments'];
+    'incident_events', 'decision_work', 'checks', 'probe_status', 'notification_outbox', 'notification_attempts', 'audit_events', 'probes', 'probe_credentials', 'assignments'];
 
 it('desce todas as migrações do produto, remove tudo o que elas criaram, e sobe de novo', function () {
     foreach (TABELAS_DO_PRODUTO as $tabela) {

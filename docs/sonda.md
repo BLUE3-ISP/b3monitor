@@ -3,7 +3,7 @@
 > **Status:** `ACTIVE` · O que `agents/probe` faz **hoje** (item B6 da fila). A especificação é o
 > [04 do pacote 1.0](../.continue/b3monitor/04_SONDAS_E_EXECUCAO.md) (com as sobreposições de
 > [PRECEDENCIA.md](../.continue/b3monitor_2.0/PRECEDENCIA.md): C-05, C-06, C-15). O **executor** nativo (a medição de
-> verdade, com a defesa de SSRF e de rebinding) é o B7; **ainda não há binário**: o que existe são os pacotes e a prova deles.
+> verdade, com a defesa de SSRF e de rebinding) é o B7 ([executor-http.md](executor-http.md)), e o binário e o processo são o B7b (abaixo).
 
 ## O ciclo (04 §1)
 
@@ -52,13 +52,30 @@ política local ─▶ bundle ─▶ agenda ─▶ planeja o slot ─▶ executa
   heartbeat traz nulo onde não sabe (idade do spool vazio, última execução, revisão sem bundle) e `unknown` nas capacidades
   não medidas; sem conseguir medir o disco, **não monta** o heartbeat em vez de inventar um número.
 
+## O processo (B7b)
+
+`b3mon-probe run -config probe.json` (`make build-probe`; exemplo em `agents/probe/exemplos/`, unit em `deploy/systemd/b3mon-probe.service`):
+
+1. **Lê a configuração local em modo estrito** (campo desconhecido é erro) e o **token de um arquivo à parte**, que tem de ser `0600` ou
+   mais restrito: um token legível por outro usuário é recusado, e a mensagem de erro e o log **nunca** o contêm.
+2. **Abre o spool e reconcilia** o que a queda deixou pela metade, **antes** do primeiro passo.
+3. **A configuração vem da central; se ela não responde, da última válida em disco.** Só um bundle **válido e desta sonda** é aplicado e
+   gravado (atômico, `0600`): um bundle recusado (campo extra, outra sonda, não-JSON, geração zero) **não sobrescreve** o bom, e a recusa
+   vai para o log. A atualização é de 60 em 60 s; o heartbeat, de 30 em 30 s.
+4. **O laço**: planeja e executa o devido, envia o spool, manda o heartbeat. Erro de rede **nunca é fatal**; só uma falha do próprio spool derruba.
+5. **SIGTERM/SIGINT terminam limpo (código 0)**: o sinal só é olhado **entre** os passos, então a medição em andamento é **finalizada** e
+   entregue antes de sair, e o spool é fechado. Cancelar no meio deixaria o slot `executando` à toa (o teste com o binário real achou isto: a
+   primeira versão saía com erro).
+
+O relógio é **declarado pelo operador** no arquivo (a sonda não mede NTP ainda): sem declaração é `unknown` com offset nulo; declarar
+`synchronized` exige `reference_kind` (o laboratório usa `lab_declared`), para um relógio declarado não passar por medido.
+
+`b3mon-probe executor -policy ... -socket ...` serve o executor num socket Unix `0600` (nunca TCP nem UDP).
+
 ## O que ele NÃO faz
 
 - **Medir sozinha.** O `Executor` é uma interface; o nativo (dial fixado no IP validado, IPv4 sem fallback, política de destinos,
   defesa de SSRF e de rebinding) está em [executor-http.md](executor-http.md). O coordenador o chama pelo socket Unix ou direto.
-- **Existir como processo.** Não há `cmd/`: falta o binário que lê a configuração local, busca o bundle e roda o laço. E a
-  central **ainda não tem** `GET /probe/config` nem `POST /probe/heartbeat`: o `Cliente.EnviarHeartbeat` existe, mas fala com
-  um endpoint que só a central falsa tem. Ficam num item novo da fila (B7b), antes do laboratório.
 - **Backlog com sessão e manifesto (04 §7; 03 §9.3).** Tudo vai como `mode: live`. A sonda já manda o dado corrente primeiro,
   mas **não distingue** replay, **não** tem cursor de replay persistente nem a sessão com faixa e quantidade esperada: é o F0-04.
 - **Referência externa de relógio.** O relógio é `unknown` até haver NTP/PTP medido. Com ele `unknown`, a central nega o voto
@@ -69,7 +86,7 @@ política local ─▶ bundle ─▶ agenda ─▶ planeja o slot ─▶ executa
 
 ## Como se prova
 
-`go test ./...` em `agents/probe` (78 testes, e `-race` limpo). Os que mais pesam: **um processo de verdade morto com SIGKILL**
+`go test ./...` em `agents/probe` (139 testes, e `-race` limpo). Os que mais pesam: **um processo de verdade morto com SIGKILL**
 no meio do trabalho, duas vezes (o spool, com um slot `executando`; o coordenador, no meio da execução do slot 1), e o
 reinício conferindo que nada se perdeu, nada duplicou e nenhum sucesso foi fabricado; o **disco cheio** (`PRAGMA
 max_page_count`: `Finalizar` falha limpo, o slot continua incompleto e reconciliável, e funciona de novo com espaço); e o
@@ -87,6 +104,12 @@ checagem de espécie em `Autoriza` (o ramo seguinte nega do mesmo jeito) e a de 
 **teste**: o gzip quebrado passava porque a partição do lote para um item por vez fugia do corpo comprimido, e o contador de
 lotes comprimidos da central falsa passou a pegá-lo; outro, um gerador de id de teste que repetia o mesmo valor depois do
 reinício e escondia a perda da identidade persistida.
+
+**O processo (B7b)** foi provado com o **binário de verdade**, compilado e rodando com o relógio real: sobe, busca o bundle numa central falsa, mede
+um alvo local, entrega os resultados e o heartbeat, e termina com **código 0** em SIGTERM, com o spool reabrível e sem slot incompleto, o token fora do
+log e o bundle em disco com `0600`. **Mutação à mão do processo: 31 estragos, 30 pegos e 1 equivalente** (`CreateTemp` já cria o arquivo com `0600`).
+Um detalhe da própria mutação: o cache de resultados do `go test` devolvia `ok` para um binário que a mutação tinha quebrado, e os scripts passaram a usar
+`-count=1` e a conferir que o estrago foi de fato aplicado (um padrão com várias linhas casava no `grep` e não no `perl`, e o mutante não existia).
 
 ## O que a prova não prova
 

@@ -105,6 +105,12 @@ final class Glossario
     }
 
     /** Lista pronta para um CHECK: `'a','b','c'`. Valores vêm do código acima, nunca de entrada externa. */
+    /** @return list<string> */
+    public static function checkKind(): array
+    {
+        return ['http', 'tcp', 'icmp', 'dns', 'tls', 'job_heartbeat'];
+    }
+
     public static function sql(array $valores): string
     {
         return implode(',', array_map(fn (string $v) => "'".str_replace("'", "''", $v)."'", $valores));

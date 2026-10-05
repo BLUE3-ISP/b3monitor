@@ -25,6 +25,11 @@ return [
         'days_behind' => (int) env('B3MON_PARTITION_DAYS_BEHIND', 1),
     ],
 
+    // O bundle entregue à sonda (B7b): por quanto tempo ela pode medir com ele, mesmo sem falar com a central (04 §1).
+    'bundle' => [
+        'validity_s' => (int) env('B3MON_BUNDLE_VALIDITY_S', 86400),
+    ],
+
     // A decisão (B5): quanto histórico o motor lê para avaliar um check. Tem de cobrir várias vezes o frescor (132 s no perfil
     // crítico); o que está fora da janela não entra na avaliação.
     'decide' => [

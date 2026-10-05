@@ -4,9 +4,8 @@ info:
   version: 0.1.0
   summary: Contrato HTTP entre a central, as sondas e os clientes (módulo mobile, painel).
   description: |
-    **Planejamento parcial.** Só `GET /health` existe hoje. A ingestão (`POST /probe/results`) nasce no
-    item B3 da fila, e `POST /probe/heartbeat` e `GET /probe/config` depois dela; estão aqui porque
-    o contrato é publicado ANTES de codificar os dois lados (06 §6).
+    **Os quatro endpoints existem hoje:** `GET /health`, `POST /probe/results` (B3), e `GET /probe/config` e
+    `POST /probe/heartbeat` (B7b). O contrato foi publicado ANTES de codificar os dois lados (06 §6).
 
     Os corpos são os JSON Schemas de `contracts/schemas/`, por `$ref` externo: há um contrato só.
     Os módulos de cliente (o módulo mobile, em outro repositório) consomem este arquivo (ADR-012).
