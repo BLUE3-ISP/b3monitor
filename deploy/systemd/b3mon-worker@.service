@@ -1,0 +1,68 @@
+# Worker de uma fila da central (D-04; B4). A instância é a fila: b3mon-worker@ingest, @decide, @notify.
+#
+#   systemctl enable --now b3mon-worker@ingest
+#
+# Só `ingest` tem handler hoje. `decide` e `notify` nascem no B5, e até lá `b3mon:work` RECUSA subir
+# nelas (sai com "não implementado"); NÃO habilite essas duas instâncias antes do B5, ou o
+# Restart=always as reinicia em laço.
+#
+# Endurecimento: 07 §10 do pacote 1.0 na versão 2.0 (C-07 da REVISAO). Medido com
+# `systemd-analyze security --offline=true` (ver README.md desta pasta).
+[Unit]
+Description=b3monitor worker da fila %i
+Documentation=file:///srv/www/b3mon/docs/runbook.md
+After=network-online.target postgresql@17-main.service
+Wants=network-online.target
+# O worker é inútil sem banco: junto com o PostgreSQL ele sobe e cai.
+Requires=postgresql@17-main.service
+# Sem limite de reinício: o worker é reiniciado SEMPRE. Um item que o derruba em laço não gira para sempre,
+# porque o reconciliador o para como `dead` ao esgotar as tentativas.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=b3mon
+Group=b3mon
+WorkingDirectory=/srv/www/b3mon/central
+ExecStart=/usr/bin/php artisan b3mon:work %i
+# O worker trata SIGTERM: termina o item em andamento e sai. 60 s cobrem a lease padrão; passado isso o
+# systemd manda SIGKILL e a lease vencida devolve o item à fila (o efeito some junto, é uma transação).
+KillSignal=SIGTERM
+TimeoutStopSec=60
+Restart=always
+RestartSec=2
+
+# ---- Endurecimento ----
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+# O que o worker escreve: logs, cache e views compiladas. O resto do sistema é somente leitura.
+ReadWritePaths=/srv/www/b3mon/central/storage /srv/www/b3mon/central/bootstrap/cache
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+ProtectProc=invisible
+ProcSubset=pid
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+RestrictNamespaces=yes
+RemoveIPC=yes
+UMask=0077
+# Sem nenhuma capability: o worker não escuta porta nem toca em rede privilegiada.
+CapabilityBoundingSet=
+AmbientCapabilities=
+# Banco por socket Unix ou TCP local, e saída para os provedores de notificação (B5).
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=multi-user.target
