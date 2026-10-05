@@ -9,6 +9,39 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.17 - B2: o banco da central, que recusa por si o que não pode existir
+
+Três migrações criam dez tabelas no PostgreSQL: `results` (particionada por dia de `started_at`, imutável),
+`result_receipts` (o ledger de idempotência global), `ingestion_work`, `current_states`, `state_events`, `incidents`,
+`incident_events`, `notification_outbox`, `notification_attempts` e `audit_events`. A regra que guia o desenho é que **o que
+o banco consegue recusar, ele recusa**, porque uma invariante que mora só na aplicação desaparece no primeiro caminho que
+esquecer dela. Entre as impostas por CHECK, gatilho ou chave única: o estado "verde" com cobertura insuficiente é
+impossível (INV-11); só **um** incidente fica aberto por chave de correlação; a mesma decisão de notificar não entra duas
+vezes; o canal `dev` é identificado como simulado por uma coluna **gerada**; e `results`, a auditoria, as tentativas e a
+linha do tempo do incidente não aceitam UPDATE nem DELETE.
+
+**A partição tem um custo, e ele está no desenho.** Em PostgreSQL toda chave única de uma tabela particionada inclui a
+coluna de partição, e nada pode apontar para ela por FK. Por isso a idempotência global **não** mora em `results`: mora no
+ledger, sem partição e com retenção maior. Sem partição para o dia de um resultado, o `INSERT` falha alto, que é o sinal
+que o monitoramento de "falha de criação de partição" precisa ver. A relação das três janelas de retenção (C-02: bruto ≥
+aceitação + 7 d, ledger ≥ bruto + 7 d) é **validada ao subir a aplicação**, e uma configuração incoerente derruba o boot.
+Os valores de enum dos CHECK vêm de uma classe `Glossario`, e um teste os compara com o `common.schema.json`, para o banco
+e o contrato não divergirem em silêncio.
+
+**Provado, e as duas vezes que quase não foi.** 43 testes de banco e 13 de retenção e glossário, cada recusa conferida
+pelo **SQLSTATE exato**; as migrações sobem, descem e sobem de novo. Estraguei o SQL de dez maneiras e cada uma derrubou um
+teste, mas **duas só caíram porque a migração quebrou por SQL inválido**, o que não prova que o teste discrimina; refeitas
+com um estrago válido (o gatilho de imutabilidade restrito a DELETE), foram pegas pelos testes de imutabilidade. Um defeito
+real apareceu na segunda execução da suíte: o `migrate:fresh` apaga as tabelas e **não** as funções, então a segunda rodada
+tropeçava nas que a primeira deixou. As funções passaram a `CREATE OR REPLACE`. Escrevi no documento "59 testes" de cabeça e
+eram 43; conferi antes de commitar. Um teste que eu havia deixado marcado como pulado foi removido, porque pulado não conta
+como aprovado.
+
+Duas diferenças em relação à fila, que o 06 §2 resolve: o ledger é `result_receipts` e a auditoria é `audit_events`, e não
+`ingestion_receipts` e `audit_log`. `probes`, `assignments`, `checks` e as demais entidades **não existem ainda** (B3, F0-04,
+F0-05), então os recibos e `results` guardam `probe_id` e `assignment_id` sem chave estrangeira. O que o banco faz e o que
+falta está em `docs/modelo-de-dados.md`.
+
 ## 0.1.16 - B1: o motor de estado existe, é uma função pura, e a suíte dele foi posta à prova por mutação
 
 `App\State\Engine`, em `central/app/State/`, recebe a política versionada, as perspectivas previstas, as

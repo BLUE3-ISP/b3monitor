@@ -17,6 +17,7 @@ deixa de ser lido.
 | [security.md](security.md) | O documento normativo de segurança. Num conflito com qualquer outro documento, ele vence. |
 | [runbook.md](runbook.md) | Da máquina limpa até o ambiente rodando; deploy; o checklist antes de tornar o repositório público. |
 | [motor-de-estado.md](motor-de-estado.md) | **O que o motor de estado faz hoje**: confirmação por perspectiva, elegibilidade, frescor e quórum por domínio; as decisões que o código tomou (e a divergência da C-01); o que ainda não está; e como foi provado, inclusive por mutação. |
+| [modelo-de-dados.md](modelo-de-dados.md) | **O que o banco da central garante hoje**: as tabelas de resultados, ledger, estado, incidentes, notificação e auditoria; o que cada uma recusa por si; por que `results` é particionada e o que isso custa; a retenção validada; e o que ainda não existe. |
 | [status/SESSOES.md](status/SESSOES.md) | **O que o agente fez de fato, sessão por sessão** (append-only): o que mudou, os comandos realmente executados, o que não pôde rodar e a próxima fatia exata. Inclui a tabela de versões instalada × suportada × escolhida da toolchain. |
 | [repodocs.md](repodocs.md) | **O que neste repositório veio do padrão da frota, e onde cada peça vive.** O mapa da relação: o que sai do repodocs por cópia, o que sai por carimbo e o que só é linkado; o manifesto dos arquivos e o que se perde quando falta um; como uma regra da frota chega a este repositório. |
 
