@@ -1,0 +1,12 @@
+{
+  "revision": "local-lab-v1",
+  "allowed_kinds": ["http"],
+  "min_interval_s": 10,
+  "max_assignments": 50,
+  "allowed_destinations": [
+    { "host": "portal.monitor.example", "ports": [80, 443] },
+    { "host": "*.lab.monitor.example", "ports": [80, 443, 8080] },
+    { "host": "127.0.0.1", "ports": [18080, 18081] }
+  ],
+  "allowed_cidrs": ["203.0.113.0/24", "127.0.0.0/8"]
+}

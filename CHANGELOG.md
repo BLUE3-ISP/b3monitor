@@ -9,7 +9,39 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
-## 0.1.20 - B5: a decisão abre e fecha o incidente pela confirmação sustentada, grava a intenção na mesma transação, e o replay não gera tempestade
+## 0.1.21 - B6: o coordenador da sonda, com política local que a central não amplia, agenda e spool que sobrevivem a SIGKILL e reenvio sem perda nem duplicata
+
+A sonda existia só como o relógio injetável. Este é o ciclo dela (04 §1), em Go, sem o executor (o B7).
+
+- **Política local** (`politica/lab.json`, hash SHA-256): o que a VM aceita medir. A central seleciona dentro dela e **nunca a
+  amplia (INV-09)**: o que ela não cobre vira `policy_denied`, sem conexão e sem chamar o executor. O bundle é lido em modo estrito
+  e confere as fixtures do contrato.
+- **Agenda e reinício.** O slot (`epoch + n × intervalo`, absoluto) é **planejado antes de executar**, com o `result_id` já
+  gerado. Um slot `executando` que a queda interrompeu vira `executor_error` com a identidade original, **nunca um sucesso
+  fabricado**; o planejado dentro da janela roda com o mesmo `result_id`; o que perdeu a janela vira `skipped`. Parada longa não
+  vira rajada: os 3 slots perdidos mais recentes viram `skipped` e o resto é uma lacuna registrada.
+- **Spool SQLite em WAL** (modernc.org/sqlite 1.60.1, o do ADR-013, em Go puro): agenda, fila, quarentena, descartes e lacunas num
+  arquivo, em transação. 2 h e 256 MiB (mais 32 MiB de reserva); o que passa sai pelo mais antigo e **cada descarte é registrado**
+  (faixa, quantidade e motivo).
+- **Envio por item**: só `accepted` e `duplicate` **com `durable`** apagam; HTTP 200 do lote não apaga o lote; backoff exponencial
+  com jitter e `Retry-After`; o 403 do lote inteiro é **partido ao meio** até isolar o item culpado, que vai para a quarentena.
+- **Heartbeat** montado conforme o contrato, com nulo onde não sabe e `unknown` nas capacidades não medidas.
+
+**Medido.** 78 testes, `-race` limpo. Dois processos de verdade **mortos com SIGKILL** (o spool com um slot executando; o coordenador
+no meio da execução) e reiniciados sem perder nem duplicar nada; **disco cheio** (`Finalizar` falha limpo e o slot continua
+reconciliável); e **central fora → spool → reenvio** com a resposta perdida depois do commit, terminando em 10 resultados na
+central e nenhum no spool.
+
+**Mutação à mão: 56 estragos, nove escaparam na primeira rodada.** Sete viraram teste (o `Atual` que ignorava o jitter, o curinga de
+host sufixo, o finalizado que renascia depois de confirmado, o backoff que não recomeçava depois do sucesso, o gzip quebrado, a
+identidade persistida descartada, o hash da política constante), dois são **equivalentes** (checagens redundantes que ficam como
+defesa em profundidade). Dois eram defeito do **teste**: o gzip quebrado passava porque a partição do lote fugia do corpo comprimido,
+e um gerador de id repetia o mesmo valor depois do reinício e escondia a perda da identidade.
+
+**Não está aqui, e `docs/sonda.md` diz o quê:** o executor (B7); o binário e os endpoints `GET /probe/config` e `POST /probe/heartbeat`
+da central, que ganham um item novo (B7b); replay com sessão e manifesto (F0-04); referência externa de relógio (o relógio é
+`unknown`, e o laboratório o declara como o que é). A **central falsa** dos testes prova a reação ao contrato, não a integração.
+ a decisão abre e fecha o incidente pela confirmação sustentada, grava a intenção na mesma transação, e o replay não gera tempestade
 
 Com os workers do B4, falta o que eles processam: o motor sobre o banco, o incidente e o aviso. O B5 liga as pontas.
 

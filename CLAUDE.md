@@ -102,8 +102,8 @@ de documentação e, na fila, o material de definição do produto.
   [docs/runbook.md](docs/runbook.md), seções 2 e 3.
 - **Testes rodam com:** `make test` — a suíte Pest da `central/`, **só no banco
   `b3mon_test`** (a trava do `tests/TestCase.php` recusa qualquer outro) e
-  `go test ./...` em cada módulo de `agents/` (hoje `agents/probe`, com o
-  relógio injetável; o `agents/watchdog` só tem o `go.mod`, e o Go avisa que não
+  `go test ./...` em cada módulo de `agents/` (hoje `agents/probe`: coordenador,
+  agenda, spool SQLite em WAL e envio, ver [docs/sonda.md](docs/sonda.md); o `agents/watchdog` só tem o `go.mod`, e o Go avisa que não
   há pacotes). Um alvo que não tem o que fazer falha; um que só tem parte, diz
   qual parte pulou, e **pulado não conta como aprovado**.
 - **Nunca toque:** `.env` e qualquer segredo; o PostgreSQL do sistema (porta
