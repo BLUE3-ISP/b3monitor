@@ -9,6 +9,36 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.16 - B1: o motor de estado existe, é uma função pura, e a suíte dele foi posta à prova por mutação
+
+`App\State\Engine`, em `central/app/State/`, recebe a política versionada, as perspectivas previstas, as
+observações e o **instante**, e devolve saúde, abrangência, cobertura, o estado de cada perspectiva e as
+transições confirmadas. Não lê o relógio, não toca banco nem rede e não envia nada: a mesma entrada dá a mesma
+saída, em qualquer ordem de chegada. Implementa a confirmação por perspectiva com sequência **consecutiva** (a
+lacuna zera), a elegibilidade (só `pass` e `fail` medem o alvo, e relógio ruim, integridade inválida e geração antiga
+não somam), o frescor, e o quórum **por domínio** da tabela 5.1: duas sondas do mesmo domínio dão um voto, e se
+discordam o domínio não vota. O presente expira por tempo, e um `down` que perde toda a observação vira `unknown`,
+nunca `up`. O que ele **não** faz está dito em `docs/motor-de-estado.md`: integridade persistente, anti-flap,
+redundância, replay e incidentes são do F0-04 e do B5.
+
+**Os testes, e por que eu confio neles.** 40 testes e 430 asserções, sem banco, rede nem relógio real, com os três casos
+do 10 §10 verbatim em `tests/Fixtures/motor/casos.json`, oito derivados da tabela 5.1, e os T-001 a T-013, T-016, T-017,
+T-024 e T-026 citados um a um. Passaram de primeira, e é exatamente por isso que não bastam: testes que eu escrevo
+contra código que eu escrevo. Então estraguei o motor de onze maneiras (frescor `>` virando `>=`, a lacuna que não zera a
+sequência, a geração antiga que entra na conta, a incapacidade de medir virando falha, relógio ruim e integridade
+inválida passando, o conflito escolhendo a primeira amostra, o domínio discordante ainda votando, o mínimo de domínios
+ignorado, a confirmação com uma falha a menos e o slot futuro participando), e **cada uma derrubou pelo menos um teste**.
+Na primeira rodada o meu script de mutação dizia que todas tinham escapado, e o defeito era dele: cortava o começo do
+JSON onde está o resultado. Um teste estático também lê o fonte do motor e quebra se alguém introduzir `DB::`, `now(` ou
+`new DateTimeImmutable()`.
+
+**Uma divergência do pacote, resolvida e registrada.** A C-01 do 2.0 dá a fórmula do frescor, `(failure_count + 1) ×
+intervalo + tolerância + margem`, e diz que ela vale "cerca de 105 a 120 s". Com 3 falhas ela dá 132 s neste perfil, e o
+"105 a 120" corresponde à fórmula **sem** o `+ 1`. Usei a fórmula, que é a parte normativa, como campo da `Policy`, com
+um teste que fixa o valor e outro que fixa a invariante que a C-01 exige (o frescor é maior que o tempo para confirmar uma
+queda). A escolha e como revertê-la estão em `.loop/ASSUMPTIONS.md`, junto das outras três do motor: `skipped` como
+ausência, o conflito no mesmo slot sem escolher por ordem de chegada, e os motivos de inelegibilidade como internos.
+
 ## 0.1.15 - A8a: os contratos existem e foram conferidos, e a validação de schema fica à espera do dono
 
 `contracts/` ganha seis schemas JSON Schema 2020-12 (resultado, lote, resposta por item, bundle,

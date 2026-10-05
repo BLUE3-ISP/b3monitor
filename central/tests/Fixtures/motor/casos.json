@@ -1,0 +1,16 @@
+{
+  "descricao": "Casos do motor de estado (10 §3, §4 e §10). Os três primeiros são os do 10 §10, verbatim; os demais são derivados da tabela 5.1 do 03 e dos casos T-xxx, e dizem de onde vêm. Cada lista tem três slots consecutivos, válidos e recentes. `missing` é símbolo da fixture, não um outcome que a sonda transporta.",
+  "casos": [
+    {"case_id": "T-003", "origem": "10 §10", "inputs": {"A": ["fail", "fail", "fail"], "B": ["fail", "fail", "fail"], "C": ["fail", "fail", "fail"]}, "expected": {"health": "down", "scope": "all_observed", "coverage": "full"}},
+    {"case_id": "T-005", "origem": "10 §10", "inputs": {"A": ["fail", "fail", "fail"], "B": ["fail", "fail", "fail"], "C": ["pass", "pass", "pass"]}, "expected": {"health": "degraded", "scope": "partial", "coverage": "full"}},
+    {"case_id": "T-007", "origem": "10 §10", "inputs": {"A": ["pass", "pass", "pass"], "B": ["missing", "missing", "missing"], "C": ["missing", "missing", "missing"]}, "expected": {"health": "unknown", "scope": "unknown", "coverage": "insufficient"}},
+    {"case_id": "T-001", "origem": "10 §3; 03 §5.1 linha 1", "inputs": {"A": ["pass", "pass", "pass"], "B": ["pass", "pass", "pass"], "C": ["pass", "pass", "pass"]}, "expected": {"health": "up", "scope": "none", "coverage": "full"}},
+    {"case_id": "T-004", "origem": "10 §3; 03 §5.1 linha 3", "inputs": {"A": ["fail", "fail", "fail"], "B": ["pass", "pass", "pass"], "C": ["pass", "pass", "pass"]}, "expected": {"health": "degraded", "scope": "partial", "coverage": "full"}},
+    {"case_id": "T-006", "origem": "10 §3; 03 §5.1 linha 5", "inputs": {"A": ["missing", "missing", "missing"], "B": ["pass", "pass", "pass"], "C": ["pass", "pass", "pass"]}, "expected": {"health": "up", "scope": "none", "coverage": "reduced"}},
+    {"case_id": "5.1-2", "origem": "03 §5.1 linha 2: 2 sucessos + 1 falha", "inputs": {"A": ["pass", "pass", "pass"], "B": ["pass", "pass", "pass"], "C": ["fail", "fail", "fail"]}, "expected": {"health": "degraded", "scope": "partial", "coverage": "full"}},
+    {"case_id": "5.1-6", "origem": "03 §5.1 linha 6: 2 falhas + 1 ausente", "inputs": {"A": ["fail", "fail", "fail"], "B": ["fail", "fail", "fail"], "C": ["missing", "missing", "missing"]}, "expected": {"health": "down", "scope": "all_observed", "coverage": "reduced"}},
+    {"case_id": "5.1-7", "origem": "03 §5.1 linha 7: 1 sucesso + 1 falha + 1 ausente", "inputs": {"A": ["pass", "pass", "pass"], "B": ["fail", "fail", "fail"], "C": ["missing", "missing", "missing"]}, "expected": {"health": "degraded", "scope": "partial", "coverage": "reduced"}},
+    {"case_id": "5.1-9", "origem": "03 §5.1 linha 9: nenhum resultado elegível", "inputs": {"A": ["missing", "missing", "missing"], "B": ["missing", "missing", "missing"], "C": ["missing", "missing", "missing"]}, "expected": {"health": "unknown", "scope": "unknown", "coverage": "insufficient"}},
+    {"case_id": "integridade-A", "origem": "03 §3 (não é o T-021): amostras de integridade inválida não alimentam a saúde", "inputs": {"A": ["pass:invalid", "pass:invalid", "pass:invalid"], "B": ["pass", "pass", "pass"], "C": ["pass", "pass", "pass"]}, "expected": {"health": "up", "scope": "none", "coverage": "reduced"}}
+  ]
+}

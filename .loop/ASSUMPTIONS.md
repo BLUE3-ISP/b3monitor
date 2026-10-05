@@ -70,3 +70,23 @@ primeiras nasceram na preparação, em 29/09/2026, antes de o loop ser armado.
   `settings.json` só libera `psql -h 127.0.0.1 -p 54329`, sem variável de ambiente à frente.
 - **Reverter:** trocar `trust` por `scram-sha-256` em `pg_hba.conf` (e `--auth-*` no `initdb`), criar as
   senhas e passá-las ao Laravel pelo `.env`. O resto do script não muda.
+
+## 7. Frescor do motor: a fórmula da C-01, e não o número do exemplo (05/10/2026, item B1)
+
+- **Pergunta:** a C-01 do 2.0 dá a fórmula do frescor, `(failure_count + 1) × interval + tolerância + margem`, e diz
+  que ela vale "cerca de 105 a 120 s" para 30 s. Com 3 falhas, a fórmula dá 132 s neste perfil (4 × 30 + 6 + 6), e os
+  dois não batem: o "105 a 120" é `failure_count × interval + tolerância + margem`.
+- **Decisão:** a fórmula, que é a parte normativa, como campo da `Policy` (`freshnessS()`), com margem de transporte de
+  6 s (o 2.0 manda ter a margem e não diz quanto). Um teste fixa o valor, e outro a invariante que a C-01 exige: o
+  frescor é maior que o tempo para confirmar uma queda.
+- **Descartada:** usar o número do exemplo (105 a 120 s), que daria um presente mais curto e mais conservador.
+- **Reverter:** trocar o `+ 1` em `Policy::freshnessS()` e ajustar o teste. A diferença é de um intervalo (30 s) a mais
+  de tolerância antes de uma perspectiva sem amostra nova virar `unknown`.
+
+## 8. Outras escolhas do motor sem decisão do dono (05/10/2026, item B1)
+
+- **`skipped` é ausência** e não incapacidade de medir: não força `unknown`, só o frescor decide.
+- **Conflito no mesmo slot** (conteúdos diferentes): nenhuma das duas vale, para o resultado não depender da ordem de
+  chegada. **Descartada:** manter a primeira recebida. **Reverter:** exige um critério de desempate que o 03 não dá.
+- **Os motivos de inelegibilidade** (`stale`, `clock_untrusted`, …) são internos ao motor e ainda não fazem parte de
+  nenhum contrato. Ao serem persistidos com a observação, precisam de ADR.
