@@ -58,7 +58,8 @@ func TestAutorizaSoOQueAPoliticaCobre(t *testing.T) {
 		{"o curinga não casa o próprio sufixo", assignment("https://lab.monitor.example/", 30, "http"), false},
 		{"host que é só o sufixo, com o ponto, não casa o curinga", assignment("https://.lab.monitor.example/", 30, "http"), false},
 		{"sufixo parecido não casa", assignment("https://x.notlab.monitor.example/", 30, "http"), false},
-		{"intervalo abaixo do mínimo local", assignment("https://portal.monitor.example/", 5, "http"), false},
+		{"intervalo abaixo do mínimo local (5 s)", assignment("https://portal.monitor.example/", 4, "http"), false},
+		{"intervalo no mínimo local passa", assignment("https://portal.monitor.example/", 5, "http"), true},
 		{"espécie não permitida", assignment("https://portal.monitor.example/", 30, "tcp"), false},
 		{"host em maiúsculas é o mesmo host", assignment("https://PORTAL.monitor.example/", 30, "http"), true},
 	}

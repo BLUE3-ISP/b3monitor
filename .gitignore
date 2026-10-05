@@ -32,6 +32,7 @@ dist/
 agents/**/bin/
 lab/.pgdata/
 lab/.pgrun/
+lab/.run/
 .loop/STATE.json
 .loop/entries/
 .loop/INDEX.md

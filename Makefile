@@ -40,11 +40,11 @@ help: ## Lista os alvos e diz quais ainda não existem
 	  'build-probe'     'compila o binário da sonda em agents/probe/bin [real]' \
 	  'verify'          'test + vet; FALHA até a validação de schema  [A8b]' \
 	  'pg-up|down|status' 'PostgreSQL de dev isolado, porta 54329      [real]' \
-	  'lab-up|down'     'laboratório numa máquina só                  [B8]' \
-	  'demo'            'cenário sintético: sucesso, falha, replay    [B8]' \
+	  'lab-up|down'     'laboratório numa máquina só                  [real]' \
+	  'demo'            'cenário sintético: sucesso, falha, replay    [real]' \
 	  'acceptance-lab'  'casos de aceite da F0-01 com evidência       [B10]' \
 	  'probe-doctor'    'diagnóstico da sonda                         [F0-02, fora da rodada]' \
-	  'smoke'           'verificação não destrutiva do ambiente       [B8]' \
+	  'smoke'           'verificação não destrutiva do laboratório    [real]' \
 	  'deploy-central'  'RECUSADO: exige autorização do dono          [nunca automático]' \
 	  'docs-bundle'     'consolidado em dist/ para colar em chat      [real]'
 
@@ -70,6 +70,7 @@ test-agents: ## go test em cada módulo de agents/ (pulado, avisando, se não ho
 	    fi; \
 	  done; \
 	fi
+	@echo "== go test lab/target"; cd lab/target && go test ./...
 
 # ⚠️ `verify` FALHA de propósito até o item A8b: ele roda o que existe (testes, go vet, composer
 # validate) e termina dizendo, com erro, que a validação de payload contra os schemas não foi feita.
@@ -97,14 +98,14 @@ pg-down: ## Para o PostgreSQL de desenvolvimento (os dados ficam)
 pg-status: ## Diz se está no ar, a versão e os bancos
 	@bash lab/pg.sh status
 
-lab-up: ## Laboratório: PG, central, workers, coordenador, executor e alvo
-	$(call nao-implementado,item B8)
+lab-up: ## Laboratório: PG, central, workers, agendador, alvo e DUAS sondas (primeira vez: composer install e go build)
+	@bash lab/lab.sh up
 
-lab-down:
-	$(call nao-implementado,item B8)
+lab-down: ## Para o laboratório (sondas com SIGTERM) e o PostgreSQL; o estado fica
+	@bash lab/lab.sh down
 
-demo: ## Cenário sintético, identificado como laboratório
-	$(call nao-implementado,item B8)
+demo: ## Cenário sintético: sucesso, falha → incidente aberto e fechado, ausência, replay (~3 min; exige make lab-up)
+	@bash lab/demo.sh
 
 acceptance-lab: ## Casos de aceite aplicáveis ao laboratório
 	$(call nao-implementado,item B10)
@@ -112,8 +113,8 @@ acceptance-lab: ## Casos de aceite aplicáveis ao laboratório
 probe-doctor: ## Diagnóstico da sonda
 	$(call nao-implementado,F0-02, fora da rodada atual)
 
-smoke: ## Verificação não destrutiva
-	$(call nao-implementado,item B8)
+smoke: ## Verificação não destrutiva do laboratório (exige make lab-up)
+	@bash lab/lab.sh smoke
 
 deploy-central: ## Deploy da central (11 §7)
 	@printf 'recusado: deploy exige autorização específica do dono e backup prévio (11 §7).\nNenhum deploy foi implementado nesta rodada.\n' >&2; exit 1

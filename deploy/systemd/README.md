@@ -25,7 +25,7 @@ O agendador do Laravel precisa de **uma** entrada de cron, a cada minuto, como o
 * * * * * b3mon cd /srv/www/b3mon/central && /usr/bin/php artisan schedule:run >> /dev/null 2>&1
 ```
 
-Hoje ele roda `b3mon:partitions` (de hora em hora), que cria as partições diárias de `results` que faltam — **sem ele a
+Hoje ele roda `b3mon:reevaluate-expired` (a cada 10 s: a expiração por tempo, sem a qual um `up` velho ficaria verde para sempre), `b3mon:partitions` (de hora em hora), que cria as partições diárias de `results` que faltam — **sem ele a
 ingestão passa a responder `retryable` quando o último dia da janela acaba** —, e `b3mon:work-reconcile` (a cada minuto), que devolve à fila o item com a lease vencida
 em **todas** as filas, inclusive nas que não têm worker vivo. O worker também reconcilia a própria
 fila a cada 15 s: o cron cobre a fila sem worker, e o worker cobre o cron parado. Particionamento,

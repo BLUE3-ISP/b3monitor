@@ -1,7 +1,7 @@
 {
   "revision": "local-lab-v1",
   "allowed_kinds": ["http"],
-  "min_interval_s": 10,
+  "min_interval_s": 5,
   "max_assignments": 50,
   "allowed_destinations": [
     { "host": "portal.monitor.example", "ports": [80, 443] },

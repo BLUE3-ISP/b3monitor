@@ -23,7 +23,7 @@ RUN="$HERE/.pgrun"
 HOST=127.0.0.1
 PORT=54329
 LOG="$DATA/server.log"
-DBS=(b3mon_dev b3mon_test)
+DBS=(b3mon_dev b3mon_test b3mon_lab)
 
 # Nada do ambiente pode desviar para o cluster do sistema.
 unset PGHOST PGPORT PGUSER PGDATABASE PGSERVICE PGPASSFILE PGPASSWORD PGSERVICEFILE
