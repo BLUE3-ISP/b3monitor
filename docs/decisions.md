@@ -421,6 +421,32 @@ com código próprio, que é mais trabalho e mais risco do que uma biblioteca.
 
 ---
 
+## ADR-015 — A fila de trabalho mora nas tabelas de domínio, com lease, e não na tabela `jobs` do Laravel
+
+**Status:** `ACCEPTED` · 05/10/2026
+
+**Contexto.** O 02 §5 e §7 do 2.0 (D-04) pedem workers `php artisan queue:work --queue=…` no driver `database`, e
+ao mesmo tempo `ingestion_work` e a outbox consumidos com `FOR UPDATE SKIP LOCKED`, lease com expiração e reconciliador
+que reenfileira lease vencida. As duas coisas não cabem juntas: o `queue:work` do Laravel guarda o trabalho na tabela
+`jobs`, com a reserva dele, e não conhece as colunas `lease_owner` e `lease_expires_at` que o B2 já pôs nas tabelas de
+domínio. Usar as duas seria um item em dois lugares, e a pergunta "o resultado aceito já foi processado?" teria duas
+respostas que podem divergir.
+
+**Decisão.** A fila **é** a tabela de domínio: `ingestion_work`, `decision_work` (nova, coalescida por check e família IP)
+e `notification_outbox`. O worker é o comando próprio `b3mon:work <fila>` (uma unit systemd por fila, template
+`b3mon-worker@.service`), e a `jobs` do Laravel não entra no caminho crítico. O processamento e a conclusão do item rodam
+**na mesma transação**, sob `FOR UPDATE` e com a lease conferida; o reconciliador devolve a lease vencida e **para como
+`dead`** o item que esgota as tentativas.
+
+**Consequências.** Facilita: o efeito e a conclusão entram juntos ou nenhum dos dois, o que dá o "worker morto não perde
+nem duplica" por construção, e a fila é consultável com SQL. Custa: não se usa `Queue::push`, `dispatch()` nem o
+`queue:failed` do Laravel para esse caminho, e quem quiser um job comum continua podendo usar a `jobs`. Um efeito **fora**
+do banco (o envio de notificação, B5) não ganha a atomicidade e precisa de idempotência própria, que é a chave única da
+outbox. **Se o dono discordar:** voltar ao `queue:work` exige mover a lease para a `jobs` e reescrever os testes de
+concorrência.
+
+---
+
 <!-- Modelo para as próximas entradas:
 
 ## ADR-NNN — <a decisão, como frase>

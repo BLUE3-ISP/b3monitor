@@ -16,7 +16,8 @@ ela impõe, e cada imposição tem um teste que a viola e confere o **SQLSTATE e
 |---|---|---|
 | `results` | O payload normalizado, **imutável**, **particionado por dia** de `started_at` | UPDATE e DELETE recusados por gatilho; agendado tem `scheduled_at` e não tem `manual_request_id`, e manual é o inverso (06 §12); duração não negativa; fim depois do início; todo enum do glossário 14 em CHECK |
 | `result_receipts` | O **ledger de idempotência global**, sem partição, com `retain_until` próprio | `result_id` único; a chave natural `(sonda, assignment, geração, slot)` única **em todas as partições**; a chave de uma execução manual não colide com a de um slot agendado |
-| `ingestion_work` | Trabalho durável, consumido com `FOR UPDATE SKIP LOCKED` (D-04, item B4) | Um item por resultado; exige recibo; `processing` exige dono e validade do lease, e `done` exige a data de processamento |
+| `ingestion_work` | Trabalho durável, consumido com `FOR UPDATE SKIP LOCKED` (D-04; B4) — estados `pending`, `processing`, `done` e `dead` (esgotou as tentativas; para, visível, com `last_error`) | Um item por resultado; exige recibo; `processing` exige dono e validade do lease, e `done` exige a data de processamento |
+| `decision_work` | A fila `decide`: pedidos de reavaliação de um check, **coalescidos** ([trabalho-assincrono.md](trabalho-assincrono.md)) | No máximo UM pedido `pending` por (check, família IP), por índice único parcial; um em `processing` não impede o próximo; mesmas regras de lease das outras filas |
 | `probes`, `probe_credentials`, `assignments` | O mínimo para a ingestão dizer "este lote é desta sonda": a credencial (só o SHA-256 do token), o status da sonda e a geração vigente de cada assignment | Nome de sonda único; token único; sonda `active`, `suspended` ou `revoked`; geração a partir de 1; família IP do glossário |
 | `current_states` | **Projeção** do estado por verificação × família IP: saúde, abrangência, cobertura, `as_of`, validade | Cobertura insuficiente ⇔ saúde `unknown` ⇔ abrangência `unknown` (INV-11: nada de "verde" com cobertura insuficiente); domínios válidos ≤ previstos |
 | `state_events` | Transições confirmadas, imutáveis | A mesma transição reprocessada não vira dois eventos; estado de origem diferente do de destino |
@@ -35,7 +36,8 @@ vive **mais** que o bruto. `ingestion_work` guarda `result_id` e `result_started
 As partições são preparadas com antecedência por `b3mon_ensure_result_partitions(primeiro, último)`, idempotente. Sem
 partição para o dia de um resultado o `INSERT` **falha alto**, com `check_violation`: é o sinal que o monitoramento de
 "falha de criação de partição" (06 §9) vai ver, em vez de uma linha caindo num balde escondido. Quem cria as partições
-no dia a dia é o agendador (item B4).
+no dia a dia é o agendador: `b3mon:partitions`, de hora em hora pelo `schedule:run`, que mantém a janela de `days_behind` atrás
+a `days_ahead` à frente (idempotente).
 
 ## Retenção (C-02 do 2.0)
 

@@ -9,6 +9,49 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.19 - B4: workers com lease e reconciliador, e o worker morto no meio não perde nem duplica o resultado
+
+A ingestão (B3) deixava o item em `ingestion_work` esperando, e nada o consumia. Este é o consumidor, com o que o
+2.0 pede dele: `FOR UPDATE SKIP LOCKED`, lease com expiração e um reconciliador que devolve a lease vencida.
+
+O ponto de desenho que sustenta as duas provas pedidas está no **ADR-015**: a fila é a própria tabela de domínio, e não
+a `jobs` do Laravel, porque o B2 já tinha posto `lease_owner` e `lease_expires_at` nelas e o `queue:work` não os conhece.
+O `claim` é um `UPDATE … WHERE id = (SELECT … FOR UPDATE SKIP LOCKED LIMIT 1)`. O passo do worker abre uma transação,
+**tranca a linha com a lease conferida**, roda o handler e conclui, tudo junto: processo morto desfaz a transação e o
+efeito some com ele; worker lento que perdeu a lease é descartado **antes** do handler.
+
+- **Três filas.** `ingest` (existe: confere que o resultado está em `results` e enfileira a reavaliação do check),
+  `decide` (tabela nova `decision_work`, coalescida por índice único parcial: um pedido pendente por check e família IP)
+  e `notify` (a outbox). `decide` e `notify` são do B5, e `b3mon:work` **recusa subir** nelas em vez de consumir sem fazer
+  nada.
+- **O item que mata o worker não volta para sempre.** Estado novo `dead` nas filas: esgotadas as tentativas, por falha ou
+  por lease vencida, o item para, visível, com o motivo em `last_error`. Antes de ter isto, um item venenoso seria
+  reenfileirado em laço.
+- **`b3mon:partitions`**, de hora em hora: sem ele a migração criava só a janela do dia em que rodou, e a ingestão
+  passaria a responder `retryable` quando o último dia acabasse. Faltava quem criasse as partições "no dia a dia" (a
+  doc do B2 dizia que seria o agendador).
+- **Unit `b3mon-worker@.service`** em `deploy/systemd/`, com o endurecimento da C-07 (`ProtectSystem=strict`,
+  `NoNewPrivileges`, capabilities vazias, `SystemCallFilter`): `systemd-analyze verify` limpo e exposição 1.3 OK no
+  `security --offline`. **Nada foi instalado**, e o layout (`b3mon`, `/srv/www/b3mon`) é o previsto em 02 §7, não medido.
+  O cron do `schedule:run` está no README da pasta.
+
+**Medido.** 215 testes, 1.368 asserções. O que prova o item: a lease vencida é retomada, e **um processo PHP de verdade é
+morto com SIGKILL no meio do passo** (transação aberta, efeito gravado e não commitado, linha trancada): o efeito não
+existe, o item continua do morto, o reconciliador o devolve só depois da lease, e o segundo worker o processa **uma vez**,
+com o resultado intacto no ledger. A suíte nova que precisa de commit de verdade (`tests/Concorrencia`) usa
+`DatabaseMigrations`.
+
+**A suíte foi submetida a mutação, e escapou quatro vezes na primeira rodada.** Dos 26 estragos à mão, escaparam: o `hold`
+que não confere o dono, o `hold` sem `FOR UPDATE`, a coalescência removida (o teste contava só os pendentes, e o passo
+que falhava por violar o índice dava o mesmo número) e o worker que não reconcilia a própria fila. Cada um ganhou o teste
+que o pega, e na segunda rodada os 26 foram pegos. A mutação também achou um defeito **do teste**: um teste de
+concorrência que falhava antes do `rollBack` deixava a segunda conexão com a transação aberta, e o `migrate:fresh` do teste
+seguinte esperava esse lock para sempre, travando a suíte por 38 minutos.
+
+**Não está aqui:** o motor sobre o banco e o envio (B5); o expurgo de itens `done` e `dead`, que só crescem; e o alerta
+de `dead` (F0-07). `docs/trabalho-assincrono.md` diz isso, com o ciclo de vida e a tabela do que acontece quando o worker
+morre.
+
 ## 0.1.18 - B3: a ingestão durável, com o reenvio provado e a bomba de descompressão recusada
 
 `POST /api/v1/probe/results` autentica a sonda por token (só o SHA-256 fica no banco), lê o corpo respeitando os limites de

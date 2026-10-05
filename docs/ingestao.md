@@ -50,8 +50,8 @@ Um item que falha **não impede** os demais do lote, e o que já commitou fica.
 
 ## O que não está aqui
 
-O **motor não é acionado**: o item em `ingestion_work` fica `pending` até os workers do **B4** o consumirem, e a decisão,
-o incidente e a notificação são do **B4** e do **B5**. **Não há limite de taxa** (`429`), que o contrato já lista. Não
+O **motor não é acionado** pela ingestão: o item em `ingestion_work` fica `pending` até o worker `ingest` o consumir
+([trabalho-assincrono.md](trabalho-assincrono.md)), e a decisão, o incidente e a notificação são do **B5**. **Não há limite de taxa** (`429`), que o contrato já lista. Não
 existe cadastro administrativo de sondas: `ProbeEnrollment` é o mínimo para a ingestão dizer "este lote é desta sonda", e
 a aprovação, a rotação e a revogação por interface são do F0-05. O replay (`mode: replay`) é aceito e gravado como
 qualquer lote durável, **sem** o manifesto, a sessão e a reconciliação, que são do F0-04.

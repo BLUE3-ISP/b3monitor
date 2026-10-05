@@ -24,4 +24,18 @@ return [
         'days_ahead' => (int) env('B3MON_PARTITION_DAYS_AHEAD', 7),
         'days_behind' => (int) env('B3MON_PARTITION_DAYS_BEHIND', 1),
     ],
+
+    // Workers das filas ingest/decide/notify (D-04; B4). Parâmetros iniciais, não SLA.
+    'work' => [
+        // Quanto um worker pode ficar com um item antes de o reconciliador devolvê-lo à fila.
+        'lease_s' => (int) env('B3MON_WORK_LEASE_S', 60),
+        // Tentativas até o item parar como `dead` (visível, com o motivo), em vez de voltar para sempre.
+        'max_attempts' => (int) env('B3MON_WORK_MAX_ATTEMPTS', 5),
+        // Espera depois de uma falha: base × 2^(tentativa-1), limitada pelo teto.
+        'backoff_base_s' => (int) env('B3MON_WORK_BACKOFF_BASE_S', 5),
+        'backoff_cap_s' => (int) env('B3MON_WORK_BACKOFF_CAP_S', 300),
+        // Pausa do worker quando a fila está vazia, e de quanto em quanto ele reconcilia a própria fila.
+        'idle_s' => (int) env('B3MON_WORK_IDLE_S', 1),
+        'reconcile_every_s' => (int) env('B3MON_WORK_RECONCILE_EVERY_S', 15),
+    ],
 ];
