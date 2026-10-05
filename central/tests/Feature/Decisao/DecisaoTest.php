@@ -331,3 +331,107 @@ it('o resultado de CANÁRIO (execution_kind canary), mesmo com horário agendado
 
     expect(Decisao::decidir(2)['incident'])->toBeNull()->and(Decisao::incidentes())->toBe([]);
 });
+
+// ---- A cadência é a do CHECK ----
+
+it('usa a cadência do check: um check de 5 s confirma a queda em 3 slots de 5 s, não de 30', function () {
+    Banco::check(['interval_s' => 5, 'timeout_ms' => 2000, 'start_tolerance_ms' => 1000]);
+    foreach ([0, 1, 2] as $n) {
+        foreach (['a', 'b'] as $k) {
+            $slot = (new DateTimeImmutable(Tests\Support\Cenario::T0))->modify('+'.($n * 5).' seconds');
+            Tests\Support\Banco::resultado([
+                'probe_id' => $this->s[$k]['probe'], 'assignment_id' => $this->s[$k]['assignment'],
+                'scheduled_at' => $slot->format('Y-m-d\TH:i:s\Z'), 'started_at' => $slot->modify('+1 second')->format('Y-m-d\TH:i:s\Z'),
+                'finished_at' => $slot->modify('+2 seconds')->format('Y-m-d\TH:i:s\Z'), 'received_at' => $slot->modify('+3 seconds')->format('Y-m-d\TH:i:s\Z'),
+                'outcome' => 'fail', 'reason_code' => 'target_timeout', 'result_id' => (string) Illuminate\Support\Str::uuid(),
+            ]);
+        }
+    }
+
+    $r = app(App\Decision\Decider::class)->decide(Banco::CHECK, 'ipv4', (new DateTimeImmutable(Tests\Support\Cenario::T0))->modify('+11 seconds'));
+
+    expect($r)->toBe(['health' => 'down', 'incident' => 'opened']);
+});
+
+it('sem a definição do check vale o perfil crítico de 30 s (e o mesmo conjunto de 5 s NÃO confirma)', function () {
+    foreach ([0, 1, 2] as $n) {
+        foreach (['a', 'b'] as $k) {
+            $slot = (new DateTimeImmutable(Tests\Support\Cenario::T0))->modify('+'.($n * 5).' seconds');
+            Tests\Support\Banco::resultado([
+                'probe_id' => $this->s[$k]['probe'], 'assignment_id' => $this->s[$k]['assignment'],
+                'scheduled_at' => $slot->format('Y-m-d\TH:i:s\Z'), 'started_at' => $slot->modify('+1 second')->format('Y-m-d\TH:i:s\Z'),
+                'finished_at' => $slot->modify('+2 seconds')->format('Y-m-d\TH:i:s\Z'), 'received_at' => $slot->modify('+3 seconds')->format('Y-m-d\TH:i:s\Z'),
+                'outcome' => 'fail', 'reason_code' => 'target_timeout', 'result_id' => (string) Illuminate\Support\Str::uuid(),
+            ]);
+        }
+    }
+
+    $r = app(App\Decision\Decider::class)->decide(Banco::CHECK, 'ipv4', (new DateTimeImmutable(Tests\Support\Cenario::T0))->modify('+11 seconds'));
+
+    expect($r['incident'])->toBeNull();
+});
+
+it('o aviso de recuperação leva a gravidade do INCIDENTE, e não a da avaliação `up`', function () {
+    Decisao::ambas($this->s, 0, 2, 'fail');
+    Decisao::decidir(2);
+    Decisao::ambas($this->s, 3, 5, 'pass');
+    Decisao::decidir(5);
+
+    $o = Decisao::outbox();
+    $recuperacao = json_decode($o[1]->payload, true);
+    expect($o[1]->reason)->toBe('recovered')
+        ->and($recuperacao['severity'])->toBe('critical')   // a queda era crítica; "warning" aqui diria que foi leve
+        ->and($recuperacao['health'])->toBe('up')
+        ->and(json_decode($o[0]->payload, true)['severity'])->toBe('critical');
+});
+
+it('a revisão da política gravada no estado é a do CHECK', function () {
+    Banco::check(['policy_revision' => 'perfil-do-check-v7', 'interval_s' => 5, 'timeout_ms' => 2000, 'start_tolerance_ms' => 1000]);
+    Decisao::ambas($this->s, 0, 2, 'pass');
+
+    app(App\Decision\Decider::class)->decide(Banco::CHECK, 'ipv4', Decisao::slot(2)->modify('+10 seconds'));
+
+    expect(DB::table('current_states')->value('policy_revision'))->toBe('perfil-do-check-v7');
+});
+
+it('o aviso de recuperação leva a MAIOR gravidade que o incidente já teve, mesmo que tenha aliviado antes de fechar', function () {
+    // Abre degradado (A cai, B de pé).
+    for ($n = 0; $n <= 2; $n++) {
+        Decisao::amostra($this->s['a'], $n, 'fail');
+        Decisao::amostra($this->s['b'], $n, 'pass');
+    }
+    Decisao::decidir(2);
+    // Agrava para queda total (B também cai).
+    for ($n = 3; $n <= 5; $n++) {
+        Decisao::amostra($this->s['a'], $n, 'fail');
+        Decisao::amostra($this->s['b'], $n, 'fail');
+    }
+    Decisao::decidir(5);
+    // Alivia: B volta, A segue caindo. O incidente volta a `warning`.
+    for ($n = 6; $n <= 8; $n++) {
+        Decisao::amostra($this->s['a'], $n, 'fail');
+        Decisao::amostra($this->s['b'], $n, 'pass');
+    }
+    Decisao::decidir(8);
+    expect(DB::table('incidents')->value('severity'))->toBe('warning');
+    // Fecha: as duas voltam.
+    Decisao::ambas($this->s, 9, 11, 'pass');
+    Decisao::decidir(11);
+
+    $recuperacao = array_values(array_filter(Decisao::outbox(), fn ($x) => $x->reason === 'recovered'));
+    expect($recuperacao)->toHaveCount(1)
+        ->and(json_decode($recuperacao[0]->payload, true)['severity'])->toBe('critical');
+});
+
+it('um incidente que NUNCA passou de degradado se recupera como warning', function () {
+    for ($n = 0; $n <= 2; $n++) {
+        Decisao::amostra($this->s['a'], $n, 'fail');
+        Decisao::amostra($this->s['b'], $n, 'pass');
+    }
+    Decisao::decidir(2);
+    Decisao::ambas($this->s, 3, 5, 'pass');
+    Decisao::decidir(5);
+
+    $r = array_values(array_filter(Decisao::outbox(), fn ($x) => $x->reason === 'recovered'));
+    expect(json_decode($r[0]->payload, true)['severity'])->toBe('warning');
+});

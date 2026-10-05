@@ -197,3 +197,16 @@ it('leva a família IP e a geração de CADA assignment, sem misturar', function
         ->and($porId['55555555-5555-4555-8555-555555555551']['ip_family'])->toBe('ipv6')
         ->and($porId['55555555-5555-4555-8555-555555555551']['config_generation'])->toBe(7);
 });
+
+it('um UPDATE que NÃO muda nada não sobe a revisão (assignment nem check)', function () {
+    $antes = bundleDe($this->a)->json('bundle_revision');
+
+    DB::table('assignments')->where('id', $this->a['assignment'])->update(['current_generation' => 3]);   // o mesmo valor
+    DB::table('checks')->where('id', $this->check)->update(['interval_s' => 30]);                         // o mesmo valor
+
+    expect(bundleDe($this->a)->json('bundle_revision'))->toBe($antes);
+
+    // E um UPDATE que muda, sobe.
+    DB::table('checks')->where('id', $this->check)->update(['interval_s' => 31]);
+    expect(bundleDe($this->a)->json('bundle_revision'))->toBe($antes + 1);
+});

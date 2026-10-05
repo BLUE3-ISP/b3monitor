@@ -29,7 +29,7 @@ final class Decider
     /** @return array{health: string, incident: string|null} */
     public function decide(string $checkId, string $family, DateTimeImmutable $at, ?Policy $policy = null): array
     {
-        $policy ??= Policy::critical();
+        $policy ??= $this->policyOf($checkId);
 
         DB::selectOne('SELECT pg_advisory_xact_lock(hashtextextended(?, 0))', ["decide:{$checkId}:{$family}"]);
 
@@ -51,5 +51,18 @@ final class Decider
         $incidente = $this->incidents->apply($checkId, $family, $avaliacao, $policy);
 
         return ['health' => $avaliacao->health->value, 'incident' => $incidente];
+    }
+
+    /**
+     * A política do check: a cadência e a tolerância de início são as DELE. Sem a definição do check (os testes do motor, e o que existia
+     * antes do cadastro), vale o perfil crítico de 30 s.
+     */
+    private function policyOf(string $checkId): Policy
+    {
+        $c = DB::table('checks')->where('id', $checkId)->first(['interval_s', 'start_tolerance_ms', 'policy_revision']);
+
+        return $c === null
+            ? Policy::critical()
+            : Policy::forCheck((int) $c->interval_s, (int) $c->start_tolerance_ms, (string) $c->policy_revision);
     }
 }

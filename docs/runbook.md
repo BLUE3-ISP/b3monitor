@@ -53,8 +53,8 @@ Quando algo não sobe:
 | O Pest recusa: "a suíte só roda em pgsql / b3mon_test / porta 54329" | A conexão de teste aponta para outro banco. É a trava do `tests/TestCase.php`: ela existe para o `RefreshDatabase` nunca apagar o `b3mon_dev`. Não a remova; corrija o `phpunit.xml` |
 | Erro `SQLSTATE[08006]` ao rodar o Pest | O PostgreSQL de dev está parado: `make pg-up` |
 
-O que **não** existe ainda: `make lab-up`, `make demo` e `make verify` falham com
-`não implementado: <item>`, e o `make deploy-central` é recusado.
+O laboratório (`make lab-up`, `make demo`, `make smoke`, `make lab-down`) está em [lab.md](lab.md). O que **não** existe ainda: `make verify`
+falha de propósito até o A8b, `make acceptance-lab` e `make probe-doctor` falham com `não implementado: <item>`, e o `make deploy-central` é recusado.
 
 ## 3. Configuração
 

@@ -115,6 +115,7 @@ cada commit um ruído de binários.
 | `__pycache__/` | Bytecode gerado ao rodar a skill vendorizada |
 | `dist/`, `agents/**/bin/` | Saída de build, inclusive o consolidado de `make docs-bundle` |
 | `lab/.pgdata/`, `lab/.pgrun/` | O cluster PostgreSQL de desenvolvimento, em espaço de usuário, na porta 54329 |
+| `lab/.run/` | O estado do laboratório (B8): pids, logs, os binários compilados, a chave da aplicação e os **tokens das sondas de laboratório**, em arquivos `0600`. Tudo se refaz com `make lab-up` |
 | `.loop/STATE.json`, `.loop/entries/`, `.loop/INDEX.md`, `.loop/STOP` | Estado de **máquina** do loop: id de sessão, caminhos, o relato bruto de cada parada |
 
 **O que continua versionado, e é a razão de a regra ser estreita:** tudo o que é
@@ -131,7 +132,7 @@ o `fleet.sh check` do repodocs não é afetado: ele só reclama de ignorar
 `CHANGELOG.md`, `version.md`, os gêmeos, os hooks, o `release.sh` e a
 `.continue/`, e nenhum deles está na tabela. O custo é que **um segredo dentro
 dessas pastas não seria visto pelo git**: a regra do `.env` e das chaves não
-muda, e `lab/.pgdata/` guarda um banco de desenvolvimento **sem dado de produção**
+muda, e `lab/.pgdata/` e `lab/.run/` guardam um banco e credenciais de desenvolvimento **sem dado de produção**
 — uma senha de produção ali seria um defeito, não uma exceção. Qualquer caminho
 novo fora do git repete este ADR ou nasce de um novo.
 

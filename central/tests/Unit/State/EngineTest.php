@@ -405,3 +405,13 @@ it('rejeita uma política com parâmetros que não fazem sentido', function () {
         ->and(fn () => new Policy('x', 30, 3, 3, -1, 6, 2))->toThrow(InvalidArgumentException::class)
         ->and(fn () => new Policy('x', 30, 3, 3, 6, 6, 0))->toThrow(InvalidArgumentException::class);
 });
+
+it('a política de um check leva a cadência e a tolerância dele, e o frescor acompanha', function () {
+    $p = Policy::forCheck(5, 1000, 'critical-v1');
+
+    expect([$p->intervalS, $p->failureCount, $p->recoveryCount, $p->startToleranceS, $p->minDomains])->toBe([5, 3, 3, 1, 2])
+        // (3+1) × 5 + 1 + 6
+        ->and($p->freshnessS())->toBe(27)
+        // Arredonda a tolerância para CIMA: 1.500 ms são 2 s, não 1.
+        ->and(Policy::forCheck(30, 1500)->startToleranceS)->toBe(2);
+});

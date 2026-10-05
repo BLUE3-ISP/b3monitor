@@ -38,6 +38,17 @@ válidos ou previstos); reavaliar o mesmo estado só atualiza `as_of` e a valida
 `state_events` é o histórico, imutável: uma linha por transição de cada perspectiva, **com a data original do slot**, e uma
 da saúde agregada. Reavaliar o mesmo conjunto não duplica (índice único).
 
+## A política e a expiração por tempo
+
+A política do motor é a do **check**: a cadência (`interval_s`) e a tolerância de início (`start_tolerance_ms`) são as dele, e `failure_count`/`recovery_count` seguem em
+3 e 3 e o mínimo em 2 domínios (`Policy::forCheck`); sem a definição do check vale o perfil crítico de 30 s. O motor exige slots separados por **exatamente** o intervalo,
+então uma política de 30 s avaliando um check de 5 s nunca confirmaria nada (achado do laboratório).
+
+**A expiração é por TEMPO (T-008).** O motor só reavalia quando há um pedido em `decision_work`, e o `IngestHandler` o faz a cada resultado **novo**. Sem resultado novo (a
+sonda parou, a central ficou fora) ninguém pedia, e um `up` velho ficaria verde para sempre. `b3mon:reevaluate-expired`, a cada 10 s pelo agendador, enfileira (coalescido) a
+reavaliação do estado que não é `unknown` e cuja validade (`valid_until`) já passou. A decisão que sai dela segue as regras de sempre: `unknown` **não** fecha incidente
+aberto e não repete aviso.
+
 ## O incidente
 
 A decisão olha **só o presente** da avaliação:
@@ -55,6 +66,8 @@ com quórum de dois domínios. `down` e `up` só chegam aqui depois delas. Gravi
 - **Início observado e confirmação são coisas diferentes** (03 §7): o início é a **primeira** falha do episódio
   (`failure_count − 1` intervalos antes do slot que confirmou); a confirmação é o instante da avaliação. Na recuperação,
   idem: o fim observado é o primeiro sucesso da última perspectiva a se recuperar.
+- O aviso de **recuperação** leva a **maior gravidade que o incidente já teve** (um incidente que chegou a `down` e aliviou para `degraded` antes de fechar foi crítico), e o de
+  abertura pode sair `warning` se uma sonda confirmou antes da outra (abrangência parcial), seguido de um `worsened` quando a segunda confirma.
 - **`decision_version`** é a `version` do incidente: 1 na abertura, e +1 em cada decisão material (agravamento, recuperação).
 
 ## A outbox e o canal `dev`

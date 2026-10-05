@@ -96,9 +96,10 @@ de documentação e, na fila, o material de definição do produto.
   ([ADR-005](docs/decisions.md)). Versões fixadas no
   [ADR-013](docs/decisions.md).
 - **Roda localmente com:** `make pg-up` (PostgreSQL de dev em espaço de usuário,
-  porta 54329; `pg-down` e `pg-status` também). `make lab-up` e `make demo`
-  **falham com `não implementado: <item>`**, de propósito: nascem no item B8 da
-  fila do loop. Os passos e as variáveis do `.env` estão em
+  porta 54329; `pg-down` e `pg-status` também). `make lab-up` sobe o laboratório
+  inteiro (central, workers, alvo `lab` e duas sondas, ~5 s) e `make demo` roda o
+  cenário (~3 min), ver [docs/lab.md](docs/lab.md); `make lab-down` o para. O
+  laboratório **não usa o `.env`**. Os passos e as variáveis do `.env` estão em
   [docs/runbook.md](docs/runbook.md), seções 2 e 3.
 - **Testes rodam com:** `make test` — a suíte Pest da `central/`, **só no banco
   `b3mon_test`** (a trava do `tests/TestCase.php` recusa qualquer outro) e

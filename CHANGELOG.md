@@ -9,7 +9,36 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
-## 0.1.23 - B7b: o binário da sonda e os dois endpoints da central que faltavam, o bundle e o heartbeat
+## 0.1.24 - B8: o laboratório, com a central, os workers, o alvo `lab` e duas sondas de verdade, e o `make demo` que fecha o ciclo
+
+`make lab-up && make demo` termina com o incidente **aberto e fechado** em `notifications-dev.log`: **DEMO OK em 158 s**, com a central de verdade (`php -S`), os três
+workers, o agendador, o alvo `lab` e **dois processos `b3mon-probe` compilados**, sem Docker e sem tocar no `.env`. `lab/lab.sh up` leva ~5 s com tudo instalado.
+
+- **Alvo `lab`** (`lab/target/`, Go): responde `X-B3mon-Lab: lab` e `[lab-target]` em **toda** resposta e log, com os modos `ok`, `falha` (503) e `lento`, alternados
+  por um endpoint de controle que **só escuta em loopback** (recusa `0.0.0.0`, `:porta`, `localhost`, `[::]`).
+- **`b3mon:lab-seed`**: duas sondas em domínios `lab-dom-a`/`lab-dom-b` (uma simulação, dita assim), o check e os assignments. **Recusa rodar** sem `B3MON_LAB=1` e fora de um banco
+  `*_lab`; tokens em arquivos `0600` e só o SHA-256 no banco; idempotente; se o arquivo do token some, emite uma credencial nova e **revoga a antiga**.
+- **O cenário** (`lab/demo.sh`), com asserção em cada fase: sucesso; falha → incidente aberto (uma notificação, não uma por amostra) e recuperação; **ausência** (as duas sondas
+  param e o estado deixa de ser `up` sozinho, sem aviso); e **reenvio** (a central cai, as sondas guardam no spool, a central volta e o incidente abre **uma** vez, com o início
+  observado no passado).
+
+**O que o laboratório achou**, e que nenhum teste de unidade tinha achado:
+1. **A expiração por tempo não existia (T-008).** Sem resultado novo ninguém pedia a reavaliação, e um `up` velho ficava verde para sempre. A fase de ausência **falhou** por isso.
+   Novo `b3mon:reevaluate-expired`, a cada 10 s, enfileira a reavaliação do estado cuja validade passou; `unknown` não fecha incidente nem avisa.
+2. **A central ignorava a cadência do check**: o `Decider` usava sempre o perfil de 30 s, e o motor exige slots separados por exatamente o intervalo, então um check de 5 s nunca
+   confirmaria nada. `Policy::forCheck` leva a cadência e a tolerância do check.
+3. **O aviso de recuperação dizia `severity=warning`** (a avaliação era `up`). Agora leva a **maior gravidade que o incidente já teve**.
+4. **O semeador não era idempotente**: um `UPDATE` sem mudança subia a revisão do bundle de todas as sondas. Migração nova: o gatilho só dispara quando a linha de fato muda.
+5. **O `artisan serve` mudava de porta em silêncio** quando a anterior não tinha sido liberada, e a sonda ficava falando com a porta errada (o replay só passou depois de trocar por `php -S`
+   direto, com espera pela porta livre).
+
+**Medido.** Central: 377 testes. Alvo: Go com `-race`. **Mutação à mão: 26 estragos na central e 13 no alvo; quatro escaparam na primeira rodada** (a trava de banco com o sufixo
+trocado, o diretório do token aberto, a revisão da política do check ignorada, o alvo que respondia a qualquer caminho) e ganharam teste. Um segundo achado do cenário: a corrida
+entre as duas sondas faz o incidente abrir `degraded` e agravar para `down`, e o cenário passou a esperar o `down` em vez de assumi-lo.
+
+**Não está aqui:** o cadastro administrativo (F0-05), prova de upstream, IPv6, iOS e diversidade real de rede (o laboratório prova o **caminho**, e isso fica como bloqueio no B10),
+o relógio medido (as sondas o declaram `lab_declared`) e o painel (B9).
+ o binário da sonda e os dois endpoints da central que faltavam, o bundle e o heartbeat
 
 O laboratório do B8 não existe sem estes dois pontos: a sonda tinha o coordenador e o executor, mas não era um processo, e a central
 não tinha como entregar a configuração nem receber o autodiagnóstico.

@@ -35,6 +35,25 @@ final class ProbeEnrollment
         return [$id, $token];
     }
 
+    /**
+     * Emite uma credencial NOVA para a sonda e REVOGA as anteriores (uma por vez vale). O token novo é devolvido uma única vez.
+     */
+    public function rotate(string $probeId): string
+    {
+        $token = self::PREFIXO.rtrim(strtr(base64_encode(random_bytes(32)), '+/', '-_'), '=');
+
+        DB::transaction(function () use ($probeId, $token): void {
+            DB::table('probe_credentials')->where('probe_id', $probeId)->whereNull('revoked_at')->update(['revoked_at' => now()]);
+            DB::table('probe_credentials')->insert([
+                'id' => (string) Str::uuid(),
+                'probe_id' => $probeId,
+                'token_hash' => self::hash($token),
+            ]);
+        });
+
+        return $token;
+    }
+
     public static function hash(string $token): string
     {
         return hash('sha256', $token);

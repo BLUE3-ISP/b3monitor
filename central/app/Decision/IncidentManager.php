@@ -130,11 +130,25 @@ final class IncidentManager
         ) !== null;
         if ($foiAvisado) {
             $this->notifier->request($aberto->id, $versao, 'recovered', $this->payload(
-                $aberto->id, $aberto->check_id, $aberto->ip_family, $e, 'recovered', $versao, $inicio, new DateTimeImmutable($aberto->confirmed_at),
+                $aberto->id, $aberto->check_id, $aberto->ip_family, $e, 'recovered', $versao, $inicio, new DateTimeImmutable($aberto->confirmed_at), $this->peakSeverity($aberto),
             ));
         }
 
         return 'recovered';
+    }
+
+    /**
+     * A MAIOR gravidade que o incidente já teve. O aviso de recuperação diz quão ruim foi, e um incidente que chegou a `down` e aliviou
+     * para `degraded` antes de fechar foi crítico: a gravidade do instante do fechamento esconderia isso.
+     */
+    private function peakSeverity(object $aberto): string
+    {
+        $chegouADown = DB::selectOne(
+            "SELECT 1 AS sim FROM incident_events WHERE incident_id = ? AND payload->>'health' = 'down' LIMIT 1",
+            [$aberto->id],
+        ) !== null;
+
+        return $chegouADown ? 'critical' : $aberto->severity;
     }
 
     private function severity(Evaluation $e): string
@@ -201,7 +215,7 @@ final class IncidentManager
     }
 
     /** @return array<string, mixed> */
-    private function payload(string $id, string $checkId, string $family, Evaluation $e, string $reason, int $versao, DateTimeImmutable $inicio, DateTimeImmutable $confirmado): array
+    private function payload(string $id, string $checkId, string $family, Evaluation $e, string $reason, int $versao, DateTimeImmutable $inicio, DateTimeImmutable $confirmado, ?string $gravidade = null): array
     {
         return [
             'incident_id' => $id,
@@ -211,7 +225,8 @@ final class IncidentManager
             'reason' => $reason,
             'decision_version' => $versao,
             'health' => $e->health->value,
-            'severity' => $this->severity($e),
+            // A gravidade é a do INCIDENTE: na recuperação a avaliação é `up`, e "warning" ali diria que o incidente foi leve.
+            'severity' => $gravidade ?? $this->severity($e),
             'scope' => $e->scope->value,
             'observed_start_at' => $this->ts($inicio),
             'confirmed_at' => $this->ts($confirmado),

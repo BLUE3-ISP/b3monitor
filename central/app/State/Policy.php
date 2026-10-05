@@ -45,6 +45,17 @@ final readonly class Policy
     }
 
     /**
+     * O perfil crítico com a CADÊNCIA do check: o motor exige slots separados por EXATAMENTE `interval_s` (a continuidade é
+     * `epoch + n × intervalo`), então uma política de 30 s avaliando um check de 5 s nunca confirmaria nada. Confirmação e recuperação
+     * seguem em 3 e 3; a tolerância de início é a do check, em segundos inteiros; a margem de transporte e o mínimo de domínios são
+     * os do perfil crítico.
+     */
+    public static function forCheck(int $intervalS, int $startToleranceMs, string $revision = 'critical-v1'): self
+    {
+        return new self($revision, $intervalS, 3, 3, (int) ceil($startToleranceMs / 1000), 6, 2);
+    }
+
+    /**
      * Frescor: idade máxima de uma observação para representar o PRESENTE (C-01 do 2.0).
      *
      * `(failure_count + 1) × interval + tolerância de início + margem de transporte`. O 03 §12 do 1.0
