@@ -1,0 +1,134 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://b3mon.example/contracts/schemas/result.schema.json",
+  "title": "Resultado normalizado",
+  "description": "Observação imutável de uma execução (06 §5; 2.0: C-05, C-06). O `probe_assessment` é relato da sonda, não veredito: a central refaz a avaliação de frescor, configuração, controles e autorização. O resultado NÃO traz corpo HTTP completo, header secreto nem credencial.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "result_id", "probe_id", "assignment_id", "config_generation", "policy_revision",
+    "execution_kind", "scheduled_at", "started_at", "finished_at", "duration_ms", "ip_family",
+    "outcome", "reason_code", "actual_destination", "metrics", "clock", "integrity", "path_evidence",
+    "executor"
+  ],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "result_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "probe_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "assignment_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "config_generation": { "type": "integer", "minimum": 1 },
+    "policy_revision": { "$ref": "common.schema.json#/$defs/short_text" },
+    "execution_kind": { "$ref": "common.schema.json#/$defs/execution_kind" },
+    "manual_request_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "scheduled_at": { "$ref": "common.schema.json#/$defs/timestamp_utc_or_null" },
+    "started_at": { "$ref": "common.schema.json#/$defs/timestamp_utc" },
+    "finished_at": { "$ref": "common.schema.json#/$defs/timestamp_utc" },
+    "duration_ms": { "$ref": "common.schema.json#/$defs/non_negative_int" },
+    "ip_family": { "$ref": "common.schema.json#/$defs/ip_family" },
+    "outcome": { "$ref": "common.schema.json#/$defs/outcome" },
+    "reason_code": { "$ref": "common.schema.json#/$defs/reason_code" },
+    "actual_destination": {
+      "description": "O destino EFETIVO da conexão. Nulo quando nenhuma conexão foi tentada (política negou, configuração inválida).",
+      "anyOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ip", "port", "hostname"],
+          "properties": {
+            "ip": { "type": "string", "anyOf": [{ "format": "ipv4" }, { "format": "ipv6" }] },
+            "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+            "hostname": { "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/short_text" }] }
+          }
+        }
+      ]
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "http_status": { "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 100, "maximum": 599 }] },
+        "total_duration_ms": { "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/non_negative_int" }] },
+        "icmp_sent": { "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/non_negative_int" }] },
+        "icmp_received": { "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/non_negative_int" }] }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "offset_ms", "reference_kind"],
+      "properties": {
+        "status": { "$ref": "common.schema.json#/$defs/clock_status" },
+        "offset_ms": { "anyOf": [{ "type": "null" }, { "type": "integer" }] },
+        "reference_kind": { "$ref": "common.schema.json#/$defs/short_text" }
+      },
+      "if": { "properties": { "status": { "const": "unknown" } }, "required": ["status"] },
+      "then": { "properties": { "offset_ms": { "type": "null" } } }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["probe_assessment", "reason_codes", "local_policy_revision"],
+      "properties": {
+        "probe_assessment": { "$ref": "common.schema.json#/$defs/integrity" },
+        "reason_codes": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/reason_code" }
+        },
+        "local_policy_revision": { "$ref": "common.schema.json#/$defs/short_text" }
+      }
+    },
+    "path_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status"],
+      "properties": {
+        "status": { "$ref": "common.schema.json#/$defs/path_binding_status" },
+        "profile_id": { "$ref": "common.schema.json#/$defs/uuid" },
+        "profile_revision": { "type": "integer", "minimum": 1 },
+        "mechanism": { "$ref": "common.schema.json#/$defs/path_mechanism" },
+        "measured_at": { "$ref": "common.schema.json#/$defs/timestamp_utc" },
+        "valid_until": { "$ref": "common.schema.json#/$defs/timestamp_utc" },
+        "forwarding_observation": { "$ref": "common.schema.json#/$defs/forwarding_observation" },
+        "evidence_refs": { "type": "array", "items": { "$ref": "common.schema.json#/$defs/short_text" } }
+      },
+      "if": { "properties": { "status": { "not": { "const": "not_required" } } }, "required": ["status"] },
+      "then": { "required": ["mechanism", "measured_at", "valid_until", "forwarding_observation"] }
+    },
+    "executor": {
+      "description": "C-05: o executor é nativo (D-02). `blackbox-adapter` do 1.0 não existe mais.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "build"],
+      "properties": {
+        "name": { "const": "native" },
+        "build": { "$ref": "common.schema.json#/$defs/short_text" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "INV-03: IPv4 e IPv6 são verificações independentes, sem fallback. O IP efetivo tem de ser da família do assignment.",
+      "if": { "properties": { "ip_family": { "const": "ipv4" }, "actual_destination": { "type": "object" } }, "required": ["ip_family", "actual_destination"] },
+      "then": { "properties": { "actual_destination": { "properties": { "ip": { "format": "ipv4" } } } } }
+    },
+    {
+      "if": { "properties": { "ip_family": { "const": "ipv6" }, "actual_destination": { "type": "object" } }, "required": ["ip_family", "actual_destination"] },
+      "then": { "properties": { "actual_destination": { "properties": { "ip": { "format": "ipv6" } } } } }
+    },
+    {
+      "description": "Agendado tem slot e não tem manual_request_id (06 §3).",
+      "if": { "properties": { "execution_kind": { "const": "scheduled" } }, "required": ["execution_kind"] },
+      "then": {
+        "properties": { "scheduled_at": { "$ref": "common.schema.json#/$defs/timestamp_utc" } },
+        "not": { "required": ["manual_request_id"] }
+      }
+    },
+    {
+      "description": "Manual tem manual_request_id e scheduled_at nulo; não reutiliza a chave de um slot agendado (06 §12).",
+      "if": { "properties": { "execution_kind": { "const": "manual" } }, "required": ["execution_kind"] },
+      "then": { "required": ["manual_request_id"], "properties": { "scheduled_at": { "type": "null" } } }
+    }
+  ]
+}

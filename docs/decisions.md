@@ -373,6 +373,54 @@ nele era a exigência do PHPUnit 13, que o esqueleto do Laravel ainda não acomp
 
 ---
 
+## ADR-014 — bibliotecas de JSON Schema para validar os contratos (proposta)
+
+**Status:** `PROPOSED` · 05/10/2026 · **Depende de decisão do dono**: dependência nova em duas
+linguagens, fora do que o [ADR-013](#adr-013--versões-fixadas-da-stack-e-toolchain-de-go-pinada-pelo-gomod)
+fixou. O `composer require` e o `go get` estão em `ask` no `settings.json` por esse motivo.
+
+**Contexto.** O item A8 criou `contracts/` com seis schemas JSON Schema 2020-12 e 44 fixtures. As
+regras que importam moram **dentro** do schema: o IP efetivo tem de ser da família do assignment
+(INV-03), relógio desconhecido tem offset nulo e nunca zero (INV-02), `accepted` só se durável, replay
+carrega a sessão, nenhum campo extra. Sem um validador, nada disso é verificado: hoje os testes só
+conferem a estrutura (JSON, `$ref`, manifesto). A central precisa validar o lote na ingestão (B3) e a
+sonda precisa validar o bundle ao recebê-lo.
+
+**O que foi medido (05/10/2026).** Nenhum validador de JSON Schema estava instalado, em PHP ou em Go.
+Duas candidatas foram avaliadas em **módulos descartáveis fora do repositório**, contra os mesmos
+schemas e o mesmo manifesto:
+
+| | Go | PHP |
+|---|---|---|
+| Biblioteca | `github.com/santhosh-tekuri/jsonschema/v6` | `opis/json-schema` |
+| Versão avaliada | v6.0.3 (28/06/2026, a mais nova) | 2.6.0 (17/10/2025, a mais nova) |
+| Licença | Apache-2.0 | Apache-2.0 |
+| Exigências | `go 1.21`; `golang.org/x/text v0.14.0` | PHP 7.4 ou 8; `opis/uri`, `opis/string`, `ext-json` |
+| Manutenção | último push em 21/09/2026 | **último release há quase um ano** |
+| 44 fixtures contra o manifesto | 0 divergências | 0 divergências |
+| Lote de 500 resultados / de 501 | válido / inválido | válido / inválido |
+| `format` (ipv4, ipv6, date-time, uuid) | só com `AssertFormat()` ligado | verificado por padrão |
+
+Além do resultado, cada fixture inválida foi conferida **pelo motivo da recusa**, e todas falham pela
+regra que dizem violar (a família divergente cai no `format`, o relógio desconhecido com offset 0 cai
+no `null`, e assim por diante). Outras bibliotecas **não** foram avaliadas.
+
+**Decisão proposta.** Adotar as duas: `opis/json-schema` `^2.6` na central (dependência de produção,
+usada na ingestão) e `github.com/santhosh-tekuri/jsonschema/v6` v6.0.3 em `agents/probe` e, se o
+vigilante validar contratos, em `agents/watchdog`. Em Go, **chamar `AssertFormat()` sempre**: sem
+ele o INV-03 não é verificado, e um IPv6 num assignment IPv4 passa. O mesmo conjunto de fixtures roda
+nos dois lados (A8b), e `make verify` passa a validar de verdade.
+
+**Consequências.** São três pacotes novos (`opis/json-schema`, `opis/uri`, `opis/string`) e dois em Go
+(a biblioteca e o `x/text`), todos de licença compatível, e o `composer.lock` e o `go.sum` registram o
+que entrou. **O risco que pesa é a manutenção da biblioteca PHP**: sem release desde 10/2025, um defeito
+de segurança nela teria de ser corrigido por nós ou por troca. Mitigação: o contrato é JSON Schema
+padrão, então trocar de biblioteca é trocar uma classe, não os schemas. **Se o dono discordar:** o
+repositório segue com a conferência estrutural que já existe, e a validação fica por conta do servidor
+com código próprio, que é mais trabalho e mais risco do que uma biblioteca.
+
+---
+
 <!-- Modelo para as próximas entradas:
 
 ## ADR-NNN — <a decisão, como frase>

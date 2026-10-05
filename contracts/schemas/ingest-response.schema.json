@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://b3mon.example/contracts/schemas/ingest-response.schema.json",
+  "title": "Resposta por item da ingestão",
+  "description": "Resposta de POST /api/v1/probe/results quando o lote chegou a ser processado (06 §6). `accepted` só é devolvido DEPOIS do commit durável: se a conexão cair depois dele, o reenvio recebe `duplicate`. O cliente não assume aceitação de item sem esta confirmação. Falhas de transporte (400, 401, 403, 413, 429, 5xx) vêm antes e não usam este corpo; `Retry-After` orienta a retentativa.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["batch_id", "items"],
+  "properties": {
+    "batch_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["result_id", "status", "received_at", "durable"],
+        "properties": {
+          "result_id": { "$ref": "common.schema.json#/$defs/uuid" },
+          "status": { "$ref": "common.schema.json#/$defs/ingest_item_status" },
+          "received_at": { "$ref": "common.schema.json#/$defs/timestamp_utc" },
+          "durable": { "type": "boolean" },
+          "reason_code": { "$ref": "common.schema.json#/$defs/reason_code" }
+        },
+        "allOf": [
+          {
+            "description": "`accepted` e `duplicate` só existem depois do commit: durable é verdadeiro.",
+            "if": { "properties": { "status": { "enum": ["accepted", "duplicate"] } }, "required": ["status"] },
+            "then": { "properties": { "durable": { "const": true } } }
+          },
+          {
+            "description": "Recusa não foi gravada: durable é falso.",
+            "if": { "properties": { "status": { "enum": ["retryable", "rejected_terminal", "conflict"] } }, "required": ["status"] },
+            "then": { "properties": { "durable": { "const": false } } }
+          }
+        ]
+      }
+    }
+  }
+}

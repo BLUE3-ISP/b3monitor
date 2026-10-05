@@ -37,7 +37,7 @@ help: ## Lista os alvos e diz quais ainda não existem
 	@printf 'b3monitor — alvos de 02 §10. "não implementado" falha de propósito.\n\n'
 	@printf '  %-19s %s\n' \
 	  'test'            'Pest na central e go test nos agentes          [real]' \
-	  'verify'          'test + análise estática + contratos          [A8]' \
+	  'verify'          'test + vet; FALHA até a validação de schema  [A8b]' \
 	  'pg-up|down|status' 'PostgreSQL de dev isolado, porta 54329      [real]' \
 	  'lab-up|down'     'laboratório numa máquina só                  [B8]' \
 	  'demo'            'cenário sintético: sucesso, falha, replay    [B8]' \
@@ -70,8 +70,17 @@ test-agents: ## go test em cada módulo de agents/ (pulado, avisando, se não ho
 	  done; \
 	fi
 
-verify: ## test + phpstan + go vet + validação dos contratos
-	$(call nao-implementado,item A8 (contratos) e os itens A6 e A7)
+# ⚠️ `verify` FALHA de propósito até o item A8b: ele roda o que existe (testes, go vet, composer
+# validate) e termina dizendo, com erro, que a validação de payload contra os schemas não foi feita.
+# Sem isso um `make verify` verde afirmaria uma verificação que ninguém fez.
+verify: test ## test + go vet + composer validate; a validação de schema é o item A8b
+	@for m in $$(ls agents/*/go.mod 2>/dev/null); do d="$$(dirname $$m)"; \
+	  if [ -z "$$(cd "$$d" && go list ./... 2>/dev/null)" ]; then \
+	    printf 'PULADO: %s tem go.mod e nenhum pacote para o go vet\n' "$$d" >&2; \
+	  else echo "== go vet $$d"; (cd "$$d" && go vet ./...) || exit 1; fi; \
+	done
+	@(cd central && composer validate --no-interaction >/dev/null) && echo "composer validate: ok"
+	@printf 'NÃO VERIFICADO: validação de payload contra os schemas (item A8b, ADR-014 proposta). Os testes conferem só a estrutura dos contratos.\n' >&2; exit 1
 
 pg-up: ## PostgreSQL 17 de desenvolvimento, em espaço de usuário, porta 54329
 	@bash lab/pg.sh up

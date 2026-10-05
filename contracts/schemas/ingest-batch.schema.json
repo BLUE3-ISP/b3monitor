@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://b3mon.example/contracts/schemas/ingest-batch.schema.json",
+  "title": "Lote de ingestão",
+  "description": "Corpo de POST /api/v1/probe/results (06 §6; C-19). De 1 a 500 resultados. O limite de 4 MiB por requisição e o de expansão de 16 MiB para gzip são do TRANSPORTE e não cabem em schema: o servidor os impõe. O 06 §6 mostra `results: []` só para demonstrar o envelope; envio produtivo exige ao menos um.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["batch_id", "mode", "replay_session_id", "results"],
+  "properties": {
+    "batch_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "mode": { "$ref": "common.schema.json#/$defs/batch_mode" },
+    "replay_session_id": { "$ref": "common.schema.json#/$defs/uuid_or_null" },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 500,
+      "items": {
+        "allOf": [
+          { "$ref": "result.schema.json" },
+          {
+            "description": "O canário tem endpoint próprio (/canary/runs) e a credencial dele não injeta resultados de sondas (06 §7).",
+            "properties": { "execution_kind": { "enum": ["scheduled", "manual"] } }
+          }
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "Replay carrega a sessão; fluxo corrente não carrega (06 §6).",
+      "if": { "properties": { "mode": { "const": "replay" } }, "required": ["mode"] },
+      "then": { "properties": { "replay_session_id": { "$ref": "common.schema.json#/$defs/uuid" } } },
+      "else": { "properties": { "replay_session_id": { "type": "null" } } }
+    }
+  ]
+}

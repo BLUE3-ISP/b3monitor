@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "probe_id": "33333333-3333-4333-8333-333333333333",
+  "sent_at": "2026-09-28T15:00:30Z",
+  "build": {
+    "version": "0.0.0-lab",
+    "commit": "lab-fixture"
+  },
+  "applied": {
+    "bundle_revision": null,
+    "config_hash": null,
+    "local_policy_hash": "0000000000000000000000000000000000000000000000000000000000000002"
+  },
+  "uptime_s": 86400,
+  "last_execution_at": "2026-09-28T15:00:02Z",
+  "schedule_lag_ms": null,
+  "spool": {
+    "rows": 0,
+    "bytes": 0,
+    "oldest_age_s": null,
+    "dropped": 0
+  },
+  "disk_free_bytes": 10737418240,
+  "capabilities": {
+    "ipv4": "available",
+    "ipv6": "unknown",
+    "icmp": "available"
+  },
+  "clock": {
+    "status": "unknown",
+    "offset_ms": null,
+    "reference_kind": "none"
+  }
+}

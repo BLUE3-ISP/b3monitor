@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "result_id": "55555555-5555-4555-8555-555555555555",
+  "probe_id": "33333333-3333-4333-8333-333333333333",
+  "assignment_id": "44444444-4444-4444-8444-444444444444",
+  "config_generation": 3,
+  "policy_revision": "critical-v1",
+  "execution_kind": "scheduled",
+  "scheduled_at": "2026-09-28T15:00:00Z",
+  "started_at": "2026-09-28T12:00:02-03:00",
+  "finished_at": "2026-09-28T15:00:02.120Z",
+  "duration_ms": 120,
+  "ip_family": "ipv4",
+  "outcome": "pass",
+  "reason_code": "http_assertions_passed",
+  "actual_destination": {
+    "ip": "203.0.113.10",
+    "port": 443,
+    "hostname": "portal.monitor.example"
+  },
+  "metrics": {
+    "http_status": 200,
+    "total_duration_ms": 120,
+    "icmp_sent": null,
+    "icmp_received": null
+  },
+  "clock": {
+    "status": "synchronized",
+    "offset_ms": 12,
+    "reference_kind": "external_ntp"
+  },
+  "integrity": {
+    "probe_assessment": "valid",
+    "reason_codes": [],
+    "local_policy_revision": "local-v1"
+  },
+  "path_evidence": {
+    "status": "not_required"
+  },
+  "executor": {
+    "name": "native",
+    "build": "lab-fixture"
+  }
+}

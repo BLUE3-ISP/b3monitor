@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://b3mon.example/contracts/schemas/heartbeat.schema.json",
+  "title": "Heartbeat da sonda",
+  "description": "Corpo de POST /api/v1/probe/heartbeat (04 §8). É AUTODIAGNÓSTICO da sonda: capacidade e saúde, nunca resultado de alvo. Não é heartbeat de job nem canário (14 §2). Valor desconhecido NÃO aparece como zero: é nulo, ou o estado diz `unknown`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "probe_id", "sent_at", "build", "applied", "uptime_s", "last_execution_at",
+    "schedule_lag_ms", "spool", "disk_free_bytes", "capabilities", "clock"
+  ],
+  "properties": {
+    "schema_version": { "$ref": "common.schema.json#/$defs/schema_version" },
+    "probe_id": { "$ref": "common.schema.json#/$defs/uuid" },
+    "sent_at": { "$ref": "common.schema.json#/$defs/timestamp_utc" },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "commit"],
+      "properties": {
+        "version": { "$ref": "common.schema.json#/$defs/short_text" },
+        "commit": { "$ref": "common.schema.json#/$defs/short_text" }
+      }
+    },
+    "applied": {
+      "description": "O que a sonda de fato aplicou: a central compara com o que enviou.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bundle_revision", "config_hash", "local_policy_hash"],
+      "properties": {
+        "bundle_revision": { "anyOf": [{ "type": "null" }, { "type": "integer", "minimum": 1 }] },
+        "config_hash": { "anyOf": [{ "type": "null" }, { "type": "string", "pattern": "^[0-9a-f]{64}$" }] },
+        "local_policy_hash": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "uptime_s": { "$ref": "common.schema.json#/$defs/non_negative_int" },
+    "last_execution_at": { "$ref": "common.schema.json#/$defs/timestamp_utc_or_null" },
+    "schedule_lag_ms": { "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/non_negative_int" }] },
+    "spool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rows", "bytes", "oldest_age_s", "dropped"],
+      "properties": {
+        "rows": { "$ref": "common.schema.json#/$defs/non_negative_int" },
+        "bytes": { "$ref": "common.schema.json#/$defs/non_negative_int" },
+        "oldest_age_s": { "anyOf": [{ "type": "null" }, { "$ref": "common.schema.json#/$defs/non_negative_int" }] },
+        "dropped": { "$ref": "common.schema.json#/$defs/non_negative_int" }
+      }
+    },
+    "disk_free_bytes": { "$ref": "common.schema.json#/$defs/non_negative_int" },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ipv4", "ipv6", "icmp"],
+      "properties": {
+        "ipv4": { "$ref": "common.schema.json#/$defs/capability_state" },
+        "ipv6": { "$ref": "common.schema.json#/$defs/capability_state" },
+        "icmp": { "$ref": "common.schema.json#/$defs/capability_state" }
+      }
+    },
+    "clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "offset_ms", "reference_kind"],
+      "properties": {
+        "status": { "$ref": "common.schema.json#/$defs/clock_status" },
+        "offset_ms": { "anyOf": [{ "type": "null" }, { "type": "integer" }] },
+        "reference_kind": { "$ref": "common.schema.json#/$defs/short_text" }
+      },
+      "if": { "properties": { "status": { "const": "unknown" } }, "required": ["status"] },
+      "then": { "properties": { "offset_ms": { "type": "null" } } }
+    }
+  }
+}

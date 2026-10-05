@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "probe_id": "33333333-3333-4333-8333-333333333333",
+  "bundle_revision": 3,
+  "issued_at": "2026-09-28T14:00:00Z",
+  "expires_at": "2026-09-29T14:00:00Z",
+  "assignments": [
+    {
+      "assignment_id": "44444444-4444-4444-8444-444444444444",
+      "config_generation": 3,
+      "check_id": "22222222-2222-4222-8222-222222222222",
+      "kind": "http",
+      "ip_family": "ipv4",
+      "target": {
+        "url": "https://portal.monitor.example/health",
+        "method": "POST",
+        "allowed_status_codes": [
+          200
+        ],
+        "follow_redirects": false
+      },
+      "schedule": {
+        "epoch": "2026-09-28T14:00:00Z",
+        "interval_s": 30,
+        "jitter_offset_ms": 2000,
+        "start_tolerance_ms": 6000,
+        "timeout_ms": 5000
+      },
+      "policy_revision": "critical-v1",
+      "path_profile_id": null,
+      "credential_ref": null
+    }
+  ]
+}

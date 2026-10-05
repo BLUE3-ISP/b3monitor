@@ -1,0 +1,254 @@
+{
+  "descricao": "Fixtures de laboratório (lab): dados fictícios, RFC 5737/3849 e .example. Uma fixture inválida viola UMA regra, dita em `regra`. Gerado de contracts/fixtures/**, não editar à mão.",
+  "fixtures": [
+    {
+      "file": "batch/invalido-canario.json",
+      "schema": "ingest-batch.schema.json",
+      "valid": false,
+      "regra": "06 §7: o canário tem endpoint próprio e não injeta resultado de sonda"
+    },
+    {
+      "file": "batch/invalido-live-com-sessao.json",
+      "schema": "ingest-batch.schema.json",
+      "valid": false,
+      "regra": "06 §6: fluxo corrente não carrega replay_session_id"
+    },
+    {
+      "file": "batch/invalido-replay-sem-sessao.json",
+      "schema": "ingest-batch.schema.json",
+      "valid": false,
+      "regra": "06 §6: replay carrega replay_session_id"
+    },
+    {
+      "file": "batch/invalido-vazio.json",
+      "schema": "ingest-batch.schema.json",
+      "valid": false,
+      "regra": "06 §6: de 1 a 500 resultados (o array vazio só demonstra o envelope)"
+    },
+    {
+      "file": "batch/valido-live.json",
+      "schema": "ingest-batch.schema.json",
+      "valid": true
+    },
+    {
+      "file": "batch/valido-replay.json",
+      "schema": "ingest-batch.schema.json",
+      "valid": true
+    },
+    {
+      "file": "bundle/invalido-callback.json",
+      "schema": "bundle.schema.json",
+      "valid": false,
+      "regra": "06 §11: o alvo não aceita URL de callback arbitrária"
+    },
+    {
+      "file": "bundle/invalido-geracao-zero.json",
+      "schema": "bundle.schema.json",
+      "valid": false,
+      "regra": "04 §2: config_generation começa em 1"
+    },
+    {
+      "file": "bundle/invalido-intervalo-zero.json",
+      "schema": "bundle.schema.json",
+      "valid": false,
+      "regra": "04 §3: intervalo de agenda positivo"
+    },
+    {
+      "file": "bundle/invalido-metodo-post.json",
+      "schema": "bundle.schema.json",
+      "valid": false,
+      "regra": "01 §6: HTTP básico só com operações sem efeito de negócio (GET, HEAD)"
+    },
+    {
+      "file": "bundle/invalido-sem-expiracao.json",
+      "schema": "bundle.schema.json",
+      "valid": false,
+      "regra": "04 §2: o bundle tem vigência e expiração"
+    },
+    {
+      "file": "bundle/invalido-url-ftp.json",
+      "schema": "bundle.schema.json",
+      "valid": false,
+      "regra": "01 §6: alvo HTTP é http ou https"
+    },
+    {
+      "file": "bundle/valido-http.json",
+      "schema": "bundle.schema.json",
+      "valid": true
+    },
+    {
+      "file": "heartbeat/invalido-capacidade-nao-contratada.json",
+      "schema": "heartbeat.schema.json",
+      "valid": false,
+      "regra": "RC-04: capacidade é da sonda; \"não contratada\" é outro assunto"
+    },
+    {
+      "file": "heartbeat/invalido-hash-curto.json",
+      "schema": "heartbeat.schema.json",
+      "valid": false,
+      "regra": "04 §8: hash da política local é SHA-256 (64 hex)"
+    },
+    {
+      "file": "heartbeat/invalido-offset-zero-desconhecido.json",
+      "schema": "heartbeat.schema.json",
+      "valid": false,
+      "regra": "INV-02: relógio desconhecido nunca vira offset 0"
+    },
+    {
+      "file": "heartbeat/valido.json",
+      "schema": "heartbeat.schema.json",
+      "valid": true
+    },
+    {
+      "file": "heartbeat/valido-recem-iniciada.json",
+      "schema": "heartbeat.schema.json",
+      "valid": true
+    },
+    {
+      "file": "response/invalido-accepted-nao-duravel.json",
+      "schema": "ingest-response.schema.json",
+      "valid": false,
+      "regra": "06 §3: accepted só depois do commit durável"
+    },
+    {
+      "file": "response/invalido-conflito-duravel.json",
+      "schema": "ingest-response.schema.json",
+      "valid": false,
+      "regra": "06 §3: conflito não foi gravado, então não é durável"
+    },
+    {
+      "file": "response/invalido-status-fora-do-glossario.json",
+      "schema": "ingest-response.schema.json",
+      "valid": false,
+      "regra": "14 §3: ingest_item_status fora do enum"
+    },
+    {
+      "file": "response/valido-accepted.json",
+      "schema": "ingest-response.schema.json",
+      "valid": true
+    },
+    {
+      "file": "response/valido-duplicate.json",
+      "schema": "ingest-response.schema.json",
+      "valid": true
+    },
+    {
+      "file": "response/valido-rejeitado.json",
+      "schema": "ingest-response.schema.json",
+      "valid": true
+    },
+    {
+      "file": "result/invalido-agendado-com-request-id.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "06 §12: manual_request_id não se reutiliza em slot agendado"
+    },
+    {
+      "file": "result/invalido-agendado-sem-slot.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "06 §3: execução agendada tem scheduled_at"
+    },
+    {
+      "file": "result/invalido-caminho-incompleto.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "05/06 §5: evidência de caminho exige mecanismo, aferição e validade"
+    },
+    {
+      "file": "result/invalido-campo-extra.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "06 §11: nenhum campo extra, em especial URL de callback"
+    },
+    {
+      "file": "result/invalido-duracao-negativa.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "06 §11: duração não negativa"
+    },
+    {
+      "file": "result/invalido-executor-blackbox.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "C-05, D-02: o executor é native; blackbox-adapter não existe mais"
+    },
+    {
+      "file": "result/invalido-familia-diverge-ipv4.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "INV-03: assignment ipv4 com IP efetivo ipv6 (sem fallback entre famílias)"
+    },
+    {
+      "file": "result/invalido-familia-diverge-ipv6.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "INV-03: assignment ipv6 com IP efetivo ipv4"
+    },
+    {
+      "file": "result/invalido-horario-local.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "14 §6: tempo só em UTC, com Z"
+    },
+    {
+      "file": "result/invalido-manual-sem-request-id.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "06 §12: execução manual exige manual_request_id"
+    },
+    {
+      "file": "result/invalido-porta-zero.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "06 §11: porta entre 1 e 65535"
+    },
+    {
+      "file": "result/invalido-reason-fora-do-glossario.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "14 §4: reason_code fora da lista estável"
+    },
+    {
+      "file": "result/invalido-relogio-desconhecido-zero.json",
+      "schema": "result.schema.json",
+      "valid": false,
+      "regra": "INV-02: relógio desconhecido nunca vira offset 0 (04 §8)"
+    },
+    {
+      "file": "result/valido-com-caminho.json",
+      "schema": "result.schema.json",
+      "valid": true
+    },
+    {
+      "file": "result/valido-http-ok.json",
+      "schema": "result.schema.json",
+      "valid": true
+    },
+    {
+      "file": "result/valido-http-timeout.json",
+      "schema": "result.schema.json",
+      "valid": true
+    },
+    {
+      "file": "result/valido-ipv6.json",
+      "schema": "result.schema.json",
+      "valid": true
+    },
+    {
+      "file": "result/valido-manual.json",
+      "schema": "result.schema.json",
+      "valid": true
+    },
+    {
+      "file": "result/valido-politica-negou.json",
+      "schema": "result.schema.json",
+      "valid": true
+    },
+    {
+      "file": "result/valido-relogio-desconhecido.json",
+      "schema": "result.schema.json",
+      "valid": true
+    }
+  ]
+}

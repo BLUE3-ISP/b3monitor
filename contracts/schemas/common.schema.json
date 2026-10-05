@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://b3mon.example/contracts/schemas/common.schema.json",
+  "title": "Definições comuns",
+  "description": "Tipos e enums compartilhados pelos demais contratos. Os enums são os do glossário 14 §3 do pacote 2.0, a ÚNICA fonte: um valor que não esteja lá está errado, não o glossário. Acrescentar um valor é por ADR, nunca renomear (14 §4).",
+  "$defs": {
+    "uuid": {
+      "type": "string",
+      "format": "uuid",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+    },
+    "timestamp_utc": {
+      "description": "RFC 3339 em UTC, sempre com Z (14 §6). Fuso local nunca atravessa o contrato.",
+      "type": "string",
+      "format": "date-time",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(\\.\\d{1,6})?Z$"
+    },
+    "timestamp_utc_or_null": {
+      "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/timestamp_utc" }]
+    },
+    "uuid_or_null": {
+      "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/uuid" }]
+    },
+    "non_negative_int": { "type": "integer", "minimum": 0 },
+    "short_text": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "schema_version": { "const": "1.0" },
+
+    "ip_family": { "enum": ["ipv4", "ipv6"] },
+    "outcome": {
+      "enum": ["pass", "fail", "executor_error", "config_error", "policy_denied", "capability_unavailable", "skipped"]
+    },
+    "execution_kind": { "enum": ["scheduled", "manual", "canary"] },
+    "check_kind": { "enum": ["http", "tcp", "icmp", "dns", "tls", "job_heartbeat"] },
+    "integrity": { "enum": ["valid", "suspect", "invalid", "unknown"] },
+    "clock_status": { "enum": ["synchronized", "unsynchronized", "unknown"] },
+    "path_binding_status": { "enum": ["valid", "not_required", "missing", "expired", "contradicted"] },
+    "forwarding_observation": { "enum": ["expected_egress", "blocked_by_policy", "divergent_egress", "not_observed"] },
+    "path_mechanism": { "enum": ["netns_pbr", "dedicated_interface", "router_readback", "traceroute_hop", "none"] },
+    "ingest_item_status": { "enum": ["accepted", "duplicate", "retryable", "rejected_terminal", "conflict"] },
+    "batch_mode": { "enum": ["live", "replay"] },
+    "capability_state": {
+      "description": "Capacidade da SONDA: 'não contratada' (da família) é outra coisa e não cabe aqui (RC-04).",
+      "enum": ["available", "unavailable", "unknown"]
+    },
+    "reason_code": {
+      "enum": [
+        "http_assertions_passed", "target_timeout", "connection_refused", "unexpected_status",
+        "assertion_failed", "tls_handshake_failed", "tls_certificate_invalid", "tls_expiring",
+        "dns_unexpected_answer", "dns_servfail", "icmp_no_reply", "executor_unavailable",
+        "family_unavailable", "policy_denied", "clock_untrusted", "path_evidence_expired",
+        "path_mismatch", "schedule_missed", "spool_full", "config_expired"
+      ]
+    }
+  }
+}

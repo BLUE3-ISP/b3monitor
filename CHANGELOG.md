@@ -9,6 +9,41 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.15 - A8a: os contratos existem e foram conferidos, e a validação de schema fica à espera do dono
+
+`contracts/` ganha seis schemas JSON Schema 2020-12 (resultado, lote, resposta por item, bundle,
+heartbeat e os tipos comuns, com os enums do glossário 14 §3), o OpenAPI 3.1 e **44 fixtures de
+laboratório**, 15 válidas e 29 inválidas, com um manifesto que diz, para cada inválida, a **regra que
+ela viola**. As invariantes que cabem em schema moram nele: o IP efetivo tem de ser da família do
+assignment (INV-03), relógio desconhecido tem offset nulo e nunca zero (INV-02), `accepted` só se
+durável, replay carrega a sessão, o executor é `native` (C-05), nenhum campo extra. O OpenAPI
+referencia os schemas por `$ref` externo, então existe um contrato e não dois.
+
+**Os schemas estão certos, e isso foi provado.** Não havia validador algum instalado, então avaliei
+duas candidatas em módulos descartáveis **fora do repositório**: `santhosh-tekuri/jsonschema` v6.0.3 em
+Go e `opis/json-schema` 2.6.0 em PHP. As 44 fixtures batem com o manifesto nas duas, com 0
+divergências; um lote de 500 resultados passa e o de 501 não; e cada inválida falha **pelo motivo
+declarado**, não por acidente. Isso também achou um fato que o ADR registra: em Go a verificação de
+`format` precisa ser ligada, senão o INV-03 não é verificado e um IPv6 num assignment IPv4 passa.
+
+**A validação dentro do repositório não foi feita, e não pude fazê-la.** As duas bibliotecas são
+dependência nova fora do ADR-013, e o `settings.json` põe `composer require` e `go get` em `ask`
+justamente para o dono decidir. O **ADR-014** é a proposta, com licença, versão, manutenção e o
+risco que pesa (a biblioteca PHP está quase um ano sem release), e o item **A8b** fica como `- 🔒`.
+O que entrou no repositório é o que não depende dela: testes estruturais **nas duas linguagens**
+(JSON bem formado, `$ref` que resolve, manifesto e disco em correspondência 1 para 1, toda inválida
+dizendo a regra), provados pela quebra intencional do contrato: um arquivo órfão e um `$ref` para
+definição inexistente derrubam o Pest e o `go test`. Pest com 8 testes e 384 asserções, e Go com os
+testes de estrutura e do relógio, todos verdes.
+
+`make verify` roda o que existe (testes, `go vet`, `composer validate`) e **termina com erro**,
+dizendo que a validação de payload contra os schemas não foi feita. Um `verify` verde afirmaria uma
+verificação que ninguém fez. Duas correções no caminho: o endpoint de ingestão é `POST
+/probe/results`, como diz o 06 §7, e eu havia escrito `POST /results` na fila; e o `go vet` num
+módulo sem pacotes quebrava o `verify`, como o `go test` já tinha quebrado o `test`, e agora esse
+módulo é pulado dizendo que foi. O `docs/status/SESSOES.md` ganhou o registro do A2 ao A8a, com os
+comandos e os resultados.
+
 ## 0.1.14 - A7: os módulos Go da sonda e do vigilante, e o custo da toolchain, finalmente medido
 
 `agents/probe` e `agents/watchdog` viram módulos Go (`github.com/BLUE3-ISP/b3monitor/agents/…`) com
