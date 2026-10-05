@@ -9,7 +9,39 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
-## 0.1.21 - B6: o coordenador da sonda, com política local que a central não amplia, agenda e spool que sobrevivem a SIGKILL e reenvio sem perda nem duplicata
+## 0.1.22 - B7: o executor HTTP nativo, em que o IP validado é o IP conectado, e o rebinding não tem onde acontecer
+
+A sonda agora mede. O desenho que sustenta a defesa está em `docs/executor-http.md`, e cabe numa frase: **a resolução de nomes
+acontece dentro do `DialContext`, uma vez por conexão, e o que foi resolvido ali é validado e discado ali.** Não há um segundo
+`lookup` entre validar e conectar, então um nome que muda de resposta (T-052) nunca é consultado uma segunda vez.
+
+- **Ordem por conexão** (a inicial e a de **cada redirecionamento**): host e porta na política; resolve **uma vez**; filtra pela
+  **família do assignment** (IPv4 só `A`, IPv6 só `AAAA`, sem fallback); **todos** os endereços da família têm de passar no
+  **piso proibido** (não especificado, `0.0.0.0/8`, multicast, broadcast, link-local, inclusive o metadado de nuvem: valem mesmo
+  que a política os cubra) e nos **CIDRs da política**; só então conecta em `tcp4`/`tcp6`, com o `Dialer.Control` conferindo o socket.
+  A política passa a **recusar CIDR largo demais** (`0.0.0.0/0`, `::/0`).
+- **Proxy nulo**, sem reaproveitar conexão, `follow_redirects` respeitado (3 saltos, sem rebaixar de https), SNI e verificação pelo
+  hostname, corpo lido só até 64 KiB, e cada falha vira o `outcome` e a `reason` do contrato. O destino efetivo é o IP e a porta da
+  **conexão**, nunca o primeiro DNS por aproximação.
+- **Sem porta de escuta:** o executor fala com o coordenador por **socket Unix de modo 0600** (nunca TCP nem UDP), e só substitui
+  um arquivo antigo se for um socket. Executor fora do ar é `executor_unavailable`, não falha do alvo.
+
+**Medido.** Os casos adversariais pedidos, cada um recusado e conferido pela **contagem de requisições que o alvo proibido
+recebeu**: o rebinding (zero requisições no serviço interno, e o nome consultado uma vez), a resposta mista com IP proibido (20
+repetições), 17 IPs proibidos, 13 formas estranhas de endereçar o mesmo host (decimal, hex, octal, `127.1`, credencial na URL…),
+redirect para destino proibido, para outra porta, em laço e rebaixando de https, e IPv4 sem fallback para IPv6. O caso legítimo
+passa com IPv4 e IPv6, com nome e com IP, em HTTP e HTTPS.
+
+**Mutação à mão: 34 estragos, cinco escaparam na primeira rodada**: a rede do IPv6 (não havia teste de IPv6 de verdade), o piso de
+multicast, broadcast e não especificado (a política os negava antes de o piso agir), o corpo sem limite (200 MiB em loopback lê rápido
+demais), e o **proxy**: o Go não usa proxy para loopback e guarda a configuração do ambiente na primeira leitura, então o teste de
+comportamento não enxergava nada, e passou a haver um teste estrutural. A segunda barreira (`Dialer.Control`) **não era exercida por
+nenhum teste de ponta a ponta**; foi extraída e é testada direto. **Um segue vivo e é equivalente:** a conferência dentro do
+`CheckRedirect`, que o `DialContext` repete na conexão do redirecionamento.
+
+**Não está aqui:** um executor por namespace de rede (F0-06), as outras espécies de teste (F0-03), e uma política de produção (o
+`politica/lab.json` é de laboratório: loopback e `203.0.113.0/24`).
+ o coordenador da sonda, com política local que a central não amplia, agenda e spool que sobrevivem a SIGKILL e reenvio sem perda nem duplicata
 
 A sonda existia só como o relógio injetável. Este é o ciclo dela (04 §1), em Go, sem o executor (o B7).
 

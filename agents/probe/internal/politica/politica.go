@@ -86,6 +86,12 @@ func Ler(dados []byte) (*Politica, error) {
 		if err != nil {
 			return nil, fmt.Errorf("política local: CIDR %q inválido", c)
 		}
+		// Um CIDR largo demais (0.0.0.0/0, 10.0.0.0/4…) transformaria a lista de permitidos em "tudo": é erro de configuração, e
+		// não uma política. O piso é /8 em IPv4 e /16 em IPv6.
+		um, bits := n.Mask.Size()
+		if (bits == 32 && um < 8) || (bits == 128 && um < 16) {
+			return nil, fmt.Errorf("política local: CIDR %q é largo demais (mínimo /8 em IPv4 e /16 em IPv6)", c)
+		}
 		p.cidrs = append(p.cidrs, n)
 	}
 	soma := sha256.Sum256(dados)

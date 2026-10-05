@@ -54,9 +54,8 @@ política local ─▶ bundle ─▶ agenda ─▶ planeja o slot ─▶ executa
 
 ## O que ele NÃO faz
 
-- **Medir.** O `Executor` é uma interface; o nativo (`net/http` com o dial fixado no IP validado, IPv4 sem fallback, política
-  de destinos e defesa de rebinding) é o **B7**. A política já valida host e porta no planejamento e tem `AutorizaIP`
-  (CIDR), que o B7 aplica no momento da conexão.
+- **Medir sozinha.** O `Executor` é uma interface; o nativo (dial fixado no IP validado, IPv4 sem fallback, política de destinos,
+  defesa de SSRF e de rebinding) está em [executor-http.md](executor-http.md). O coordenador o chama pelo socket Unix ou direto.
 - **Existir como processo.** Não há `cmd/`: falta o binário que lê a configuração local, busca o bundle e roda o laço. E a
   central **ainda não tem** `GET /probe/config` nem `POST /probe/heartbeat`: o `Cliente.EnviarHeartbeat` existe, mas fala com
   um endpoint que só a central falsa tem. Ficam num item novo da fila (B7b), antes do laboratório.

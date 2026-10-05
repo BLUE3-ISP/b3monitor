@@ -93,6 +93,9 @@ func TestPoliticaMalFormadaNaoCarrega(t *testing.T) {
 		"CIDR inválido":      `{"revision":"r","allowed_kinds":["http"],"min_interval_s":1,"max_assignments":1,"allowed_cidrs":["10.0.0.0/99"]}`,
 		"porta inválida":     `{"revision":"r","allowed_kinds":["http"],"min_interval_s":1,"max_assignments":1,"allowed_destinations":[{"host":"x","ports":[70000]}]}`,
 		"destino sem porta":  `{"revision":"r","allowed_kinds":["http"],"min_interval_s":1,"max_assignments":1,"allowed_destinations":[{"host":"x","ports":[]}]}`,
+		"CIDR que é tudo":    `{"revision":"r","allowed_kinds":["http"],"min_interval_s":1,"max_assignments":1,"allowed_cidrs":["0.0.0.0/0"]}`,
+		"CIDR largo demais":  `{"revision":"r","allowed_kinds":["http"],"min_interval_s":1,"max_assignments":1,"allowed_cidrs":["10.0.0.0/7"]}`,
+		"IPv6 que é tudo":    `{"revision":"r","allowed_kinds":["http"],"min_interval_s":1,"max_assignments":1,"allowed_cidrs":["::/0"]}`,
 		"intervalo zero":     `{"revision":"r","allowed_kinds":["http"],"min_interval_s":0,"max_assignments":1}`,
 	}
 	for nome, conteudo := range ruins {
