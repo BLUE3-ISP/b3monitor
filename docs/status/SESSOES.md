@@ -175,3 +175,37 @@ Tarefas livres: F0-02 em diante, no laboratório. Próxima fatia exata: **a prov
 ### Estado dos gates
 
 G-CORE, G-DATA e G-SEC em `in_progress`; G-UP `blocked` (Q-02); G-WATCH, G-MOBILE e G-OPS `not_started`. Detalhe em [INVENTARIO.md](INVENTARIO.md).
+
+---
+
+## 2026-10-06 · F0-01 FECHADA — a prova num clone novo
+
+| Campo | Valor |
+|---|---|
+| Data e sessão | 06/10/2026 · a mesma sessão, último item da fila da rodada |
+| Repositório / branch / commit | `BLUE3-ISP/b3monitor` · `master` · clone do **remoto** em `5a62ead` (versão 0.1.28) |
+| Fatia do backlog | F0-01; item **F0-01 FECHADA** |
+| Ambiente | Debian 13 (Linux 6.12), PHP 8.4.26, Go 1.26.8 (toolchain do módulo), PostgreSQL 17.11, Node 24. A máquina de desenvolvimento, com a rede, e **sem nada do clone principal rodando** |
+
+### O que se fez
+
+1. `make lab-down` e `make pg-down` no clone principal; `make pg-status` confirma **parado**.
+2. `git clone git@github.com:BLUE3-ISP/b3monitor.git` num diretório temporário **fundo** (o caminho do socket Unix teria 126 bytes) e, de lá, `make lab-up && make demo`, sem nenhum arquivo copiado do clone principal.
+
+### Resultado
+
+- **Primeira tentativa (0.1.27): FALHOU.** `pg_ctl: could not start server`; o log do PostgreSQL: *Unix-domain socket path … is too long (maximum 107 bytes)*. O socket em `lab/.pgrun` nunca tinha
+  aparecido como problema num caminho curto. **Corrigido na 0.1.28** (`lab/pg.sh` sobe sem socket Unix; todo cliente fala TCP em `127.0.0.1`).
+- **Segunda tentativa (0.1.28): passou.** `make lab-up` instalou as dependências da central (`composer install`) e compilou o CSS do painel (`npm ci` e `npm run build`) na primeira subida, criou o cluster
+  e o banco, migrou, compilou o alvo e a sonda com `go build`, semeou as duas sondas e subiu tudo. **`make demo`: DEMO OK em 180 s** (sucesso, falha → incidente aberto e fechado, ausência sem queda inventada,
+  reenvio sem tempestade). Tempo total, do clone ao fim do demo: **203 s**, com rede e cache de módulos quentes.
+- O clone ficou parado depois (`make lab-down`).
+
+### O que isto não prova
+
+Só reproduz o **laboratório** a partir do repositório: não prova nada de ambiente real, de rede, de IPv6, de upstream, de mobile nem de canal real (ver [INVENTARIO.md](INVENTARIO.md)). A máquina
+tinha a rede e os pacotes de sistema (PHP, Go, PostgreSQL 17, Node, `jq`, `curl`): **uma máquina sem eles não sobe**, e isso é o `docs/runbook.md` §1. O cache de módulos do Go e do Composer estava quente.
+
+### Estado dos gates e próxima fatia
+
+Gates como em [INVENTARIO.md](INVENTARIO.md): nenhum passou de `in_progress`, G-UP `blocked`. A F0-01 passa de `implemented` para **`verified_lab`**. Próxima fatia: F0-02 ou F0-04, no laboratório, ou o que o dono destravar.

@@ -9,6 +9,14 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.29 - F0-01 FECHADA: make lab-up e make demo passam do zero num clone novo do remoto, e a F0-01 vira verified_lab
+
+Com o PostgreSQL do clone principal parado, um `git clone` do remoto num diretório temporário e, de lá, `make lab-up && make demo` sem nada copiado: **DEMO OK em 180 s**, 203 s do clone ao fim. A primeira tentativa
+(0.1.27) **falhou** pelo socket Unix longo demais e foi corrigida na 0.1.28; a segunda instalou as dependências da central, compilou o CSS do painel, migrou, compilou o alvo e a sonda e rodou o cenário inteiro.
+Registrado em `docs/status/SESSOES.md`, com o que isto **não** prova (nada de ambiente real; uma máquina sem rede nem os pacotes de sistema não sobe). A F0-01 passa de `implemented` para `verified_lab`;
+nenhum gate passou de `in_progress` e o G-UP segue `blocked`.
+
+
 ## 0.1.28 - F0-01 num clone novo: o PostgreSQL do laboratório não cria mais o socket Unix, que estourava o teto de 107 bytes num diretório fundo
 
 A prova da F0-01 (`git clone` num diretório temporário e `make lab-up` do zero) **falhou na primeira tentativa**: `pg_ctl: could not start server`. O log do PostgreSQL dizia que o caminho do socket Unix

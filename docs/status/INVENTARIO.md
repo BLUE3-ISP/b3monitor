@@ -2,7 +2,7 @@
 
 > **Status:** `ACTIVE` · A parte **viva** do [13 do pacote 1.0](../../.continue/b3monitor/13_CHECKLIST_DO_PILOTO_E_STATUS.md) (§1, §3, §4, §8 e §11). O 13 original **não é reescrito**
 > ([ADR-004](../decisions.md)): este arquivo é o que o agente e o responsável operacional atualizam. Estados de trabalho: os de [09 §1](../../.continue/b3monitor/09_BACKLOG_E_PLANO_DE_ENTREGA.md),
-> e **nada passa de `verified_lab`**: nenhum item aqui foi verificado em ambiente real. Atualizado em 06/10/2026, versão 0.1.27.
+> e **nada passa de `verified_lab`**: nenhum item aqui foi verificado em ambiente real. Atualizado em 06/10/2026, versão 0.1.29.
 
 ## 1. Situação
 
@@ -12,6 +12,7 @@
 | Repositório e branch | `BLUE3-ISP/b3monitor`, `master`; versão em `version.md` | `git log`, [CHANGELOG](../../CHANGELOG.md) |
 | Central (`central/`) | Implementada até a F0-01: ingestão, workers, motor, incidente, outbox, bundle, heartbeat, painel | Suíte Pest (402) no banco de teste |
 | Sonda (`agents/probe`) | Implementada até a F0-01: política local, agenda, spool, envio, executor HTTP, binário | `go test -race` (139) |
+| Reprodução do zero | **`make lab-up && make demo` passa num clone novo do remoto** (06/10/2026, 0.1.28, 203 s): [SESSOES.md](SESSOES.md). F0-01: `verified_lab` |
 | Testes de aplicativo | **Rodam no laboratório**: `make test`, `make demo`, `make acceptance-lab` | [evidence/f0-01/ACEITE.md](../../evidence/f0-01/ACEITE.md), [aceite.md](../aceite.md) |
 | `make verify` | **Falha de propósito** até o A8b: a validação de payload contra os schemas depende do ADR-014 (do dono) | [decisions.md](../decisions.md) |
 | Infraestrutura real | **Não inventariada nem provisionada** | — |
