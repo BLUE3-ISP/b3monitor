@@ -57,7 +57,9 @@ de segurança (07) › estados (03) › prova de caminho (05) › contratos (06)
 
 | Estava aqui | Agora está em |
 |---|---|
-| _(nada ainda)_ | |
+| `b3monitor/13_CHECKLIST_DO_PILOTO_E_STATUS.md` — a parte **viva** (situação, inventário de sondas, central, quadro de gates, checklist de liberação). O 13 original **fica**, intacto ([ADR-004](../docs/decisions.md)) | [`docs/status/INVENTARIO.md`](../docs/status/INVENTARIO.md) |
+| `b3monitor/13_…` §9 (registro de execução por sessão) | [`docs/status/SESSOES.md`](../docs/status/SESSOES.md) |
+| `b3monitor/03`, `04`, `06` e `08 §5`, **na parte que já foi implementada** (motor, sonda, ingestão, painel). Os originais ficam: são a especificação, e o que ainda não existe continua só neles | [`docs/motor-de-estado.md`](../docs/motor-de-estado.md), [`sonda.md`](../docs/sonda.md), [`ingestao.md`](../docs/ingestao.md), [`modelo-de-dados.md`](../docs/modelo-de-dados.md), [`painel.md`](../docs/painel.md) |
 
 ## 3. Decisões pendentes
 

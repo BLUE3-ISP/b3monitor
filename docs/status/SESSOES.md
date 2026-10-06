@@ -121,3 +121,57 @@ Próxima fatia exata: **B1**, o motor de estado `App\State\Engine`, puro e deter
 ### Estado dos gates
 
 Todos como estavam: `not_started`, e `G-UP` `blocked` (Q-02).
+
+---
+
+## 2026-10-05 a 2026-10-06 · B1 a B10 — a fatia F0-01
+
+| Campo | Valor |
+|---|---|
+| Data e sessão | 05 e 06/10/2026 · a mesma sessão, loop armado nela |
+| Repositório / branch / commit | `BLUE3-ISP/b3monitor` · `master` · de `6af52e3` (0.1.16) até `39b537f` (0.1.26) |
+| Fatia do backlog | F0-01 (e a trilha F0-09 desde o primeiro dia); itens B1 a B10 da fila |
+| Arquivos alterados | `central/` (motor, banco, ingestão, workers, decisão, outbox, bundle, heartbeat, painel Livewire), `agents/probe/` (coordenador, agenda, spool, envio, executor, binário), `lab/` (pg, lab, demo, acceptance, alvo), `deploy/systemd/`, `docs/` (nove documentos novos), `evidence/f0-01/`, `Makefile` |
+| Decisões DE/ADR | ADR-015 (filas por tabela de domínio, com lease) e a atualização do ADR-003 (`lab/.run/` fora do git). Premissas em `.loop/ASSUMPTIONS.md` §10 |
+
+### Comandos realmente executados e resultado
+
+| Item | Comando | Resultado |
+|---|---|---|
+| B1 a B7b, B9 | `./vendor/bin/pest` na `central/`, banco `b3mon_test` | **402 testes** passando |
+| B6, B7, B7b | `go test -count=1 -race ./...` em `agents/probe` | **139 testes**, sem corrida; `CGO_ENABLED=0` compila |
+| B8 | `make lab-up && make demo` | **DEMO OK em 158 a 164 s**: sucesso, falha → incidente aberto e fechado, ausência sem queda inventada, reenvio sem tempestade |
+| B9 | `npm run build`; captura com Chrome headless em 1366×768 | `evidence/f0-01/painel-*.png`, sem rolagem horizontal |
+| B10 | `make acceptance-lab` | **ACEITE OK em 183 s**: 16 casos aprovados, 8 bloqueios registrados |
+| Todos | **Mutação à mão**, por item | 26 + 36 + 56 + 34 + 66 + 39 + 25 + 6 estragos; o que escapou na primeira rodada virou teste, e o que sobrou equivalente está dito |
+
+### Teste não executado e motivo
+
+- **IPv6, upstream real, diversidade real de rede, relógio medido (NTP/PTP), canal real (Telegram, FCM, APNs), iOS, autenticação do painel e carga.** O laboratório não pode prová-los; ficam
+  **como bloqueio**, e o `make acceptance-lab` os lista como tal ([aceite.md](../aceite.md)).
+- **Validação de payload contra os schemas** (A8b) e **`central/.env.example`**: seguem com o dono (ver a sessão anterior).
+- **A reação da sonda a uma resposta perdida, ao vivo:** provada só pelo teste Go com a central falsa; ao vivo, a "resposta perdida" é descartada pelo cliente.
+- **T-001 pede três origens**; o laboratório tem duas.
+
+### Diferença laboratório × real
+
+Alvo de mentira, duas sondas simuladas na mesma máquina e um canal `dev` simulado, com política local de laboratório (`politica/lab.json`: loopback e `203.0.113.0/24`). PostgreSQL de dev com `trust`
+em loopback. **Nada disto é evidência de ambiente real**, e nenhum gate passou de `in_progress`.
+
+### Riscos e regressões encontrados (pelo próprio laboratório e pelo aceite)
+
+- **A expiração por tempo não existia (T-008):** um `up` velho ficava verde para sempre. Veio `b3mon:reevaluate-expired`.
+- **A central ignorava a cadência do check**, e a recuperação avisava a gravidade errada. Corrigidos (`Policy::forCheck`, `peakSeverity`).
+- **Um defeito de reavaliação:** avaliação "no passado" depois do fechamento reabria o incidente; guarda no `Decider`.
+- **SIGTERM cancelava o passo da sonda** e saía com erro (achado pelo binário real); o semeador não era idempotente e subia a revisão do bundle; o `artisan serve` mudava de porta em silêncio.
+- **Um teste da sonda só passava dentro do pacote** (ids do processo filho colidiam com o contador do pai); achado porque o aceite o roda isolado.
+- **Uma suposição de mutação:** o `php -S` usa opcache com revalidação a cada 2 s, e um estrago na central só vale depois disso.
+
+### Bloqueio humano e próxima fatia
+
+Bloqueios do dono: ADR-014 (A8b), `central/.env.example`, Q-02 e Q-03, nome do produto, provisionar as sondas externas, Telegram/FCM/APNs, qualquer deploy, e o runner `cicd` para o `make verify`.
+Tarefas livres: F0-02 em diante, no laboratório. Próxima fatia exata: **a prova da F0-01 num clone novo** (`make lab-up && make demo` do zero), e depois a F0-02 ou a F0-04.
+
+### Estado dos gates
+
+G-CORE, G-DATA e G-SEC em `in_progress`; G-UP `blocked` (Q-02); G-WATCH, G-MOBILE e G-OPS `not_started`. Detalhe em [INVENTARIO.md](INVENTARIO.md).

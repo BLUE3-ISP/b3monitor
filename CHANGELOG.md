@@ -9,6 +9,15 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.27 - B11: o inventário e o quadro de gates vivos em docs/status, o registro da sessão B1 a B10 e o índice da .continue atualizado
+
+`docs/status/INVENTARIO.md` é a parte **viva** do 13 (o 13 original fica intacto, ADR-004): a situação real, o inventário de sondas (as duas de laboratório são **simulação**; as externas e a interna, não provisionadas), a central (só
+laboratório, sem deploy, painel sem login) e o **quadro de gates**: G-CORE, G-DATA e G-SEC em `in_progress`, G-UP `blocked`, o resto `not_started`, cada um com o que está provado e o que falta. Nada passa de `verified_lab`.
+
+`docs/status/SESSOES.md` ganhou a sessão **B1 a B10**: os comandos de fato executados, o que não rodou e por quê, a diferença laboratório × real, os riscos que o próprio laboratório achou e o que fica com o dono.
+O `.continue/README.md` §2 diz para onde cada coisa foi (sem apagar nenhum original).
+
+
 ## 0.1.26 - B10: o aceite da F0-01 no laboratório (make acceptance-lab), com INV, RC e T em cada caso e os bloqueios escritos como bloqueio
 
 `make lab-up && make acceptance-lab` (~4 min) roda os casos da fatia e escreve `evidence/f0-01/ACEITE.md`, **sanitizado** (comando, versão, commit, ambiente e o resultado de cada caso; sem home,
