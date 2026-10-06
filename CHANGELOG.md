@@ -9,6 +9,27 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.25 - B9: o painel mínimo (Blade, Livewire e CoreUI), que nunca mostra verde antigo e vem fechado, só em loopback
+
+`/painel` mostra os estados atuais, os incidentes, as sondas e os avisos, numa tela só, **legível em 1366×768 sem rolagem horizontal**, que se atualiza a cada 5 s. O painel
+**lê e não decide**: quem decide é o motor. Capturas sintéticas do laboratório em `evidence/f0-01/` (o estado saudável e o incidente aberto).
+
+- **Nunca verde antigo.** Entre a `valid_until` vencer e o `b3mon:reevaluate-expired` rodar, o banco ainda diz `up`; o painel **não confia nisso**: um estado vencido (ou que
+  nunca teve evidência elegível) aparece como **desconhecido**, com a abrangência também desconhecida, e uma nota diz que o último estado confirmado é histórico. A fronteira é exata.
+- **Saúde, cobertura e integridade são colunas separadas (C-12).** "Em pé" com cobertura reduzida (1 de 3 domínios) não se confunde com "em pé" com cobertura plena; uma
+  perspectiva descartada por integridade diz `comprometida` e um relógio não confiável é dito, sem virar "o alvo caiu".
+- **Incidente** com os três instantes que não são o mesmo (início observado, confirmado em, fim confirmado), abertos primeiro. **Sondas** com a idade do heartbeat (calada, ou
+  "nunca falou"), a revisão do bundle aplicada contra a da central, o relógio e o descarte do spool. **Avisos** com o canal `dev` marcado SIMULADO. Horas em Brasília, com o fuso dito.
+- **Fechado por padrão.** Sem login até o F0-05, o painel responde `404` com `B3MON_PANEL_ENABLED` desligado e, ligado, só atende o loopback (`403` no resto; `X-Forwarded-For` não conta).
+  A trava é um middleware **persistente** do Livewire, porque a atualização do componente é um `POST` que não passaria pelo middleware da rota.
+- **Dependências novas** (decididas em D-06 e fixadas no ADR-013): Livewire 4.4.7 e CoreUI 5.9.1, com Vite 8. O CSS compilado (`public/build/`) não é versionado; o `make lab-up` o compila na primeira subida.
+- **O laboratório** liga o painel e o identifica numa faixa ("LABORATÓRIO — dados sintéticos"); o `make smoke` confere que ele responde.
+
+**Provas:** 25 testes Pest/Livewire (402 na suíte da central), inclusive um estado derivado do **motor de verdade** e o estado vencido que o banco ainda chama de `up`. **Mutação à mão:
+25 estragos, 24 pegos e 1 equivalente** (a guarda `validade === null`: em PHP `DateTimeImmutable > null` já é verdadeiro). Dois escaparam na primeira rodada e ganharam teste: a abrangência
+de um estado vencido, e o nome da sonda dentro da perspectiva (a tabela de sondas o mostrava na mesma página e escondia o defeito). **Não provado:** que uma pessoa entende a tela sob estresse
+(só se mediu a legibilidade), e nada de login (F0-05). Ver [docs/painel.md](docs/painel.md).
+
 ## 0.1.24 - B8: o laboratório, com a central, os workers, o alvo `lab` e duas sondas de verdade, e o `make demo` que fecha o ciclo
 
 `make lab-up && make demo` termina com o incidente **aberto e fechado** em `notifications-dev.log`: **DEMO OK em 158 s**, com a central de verdade (`php -S`), os três

@@ -1,0 +1,13 @@
+@import '@coreui/coreui/dist/css/coreui.min.css';
+
+/* O que é NOSSO e não é do CoreUI. Legível em 1366×768 sem rolagem horizontal (08 §5). */
+:root { --b3-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+body { background: var(--cui-tertiary-bg, #f3f4f7); font-size: .875rem; }
+.b3-faixa-lab { background: #5b21b6; color: #fff; text-align: center; padding: .25rem; font-weight: 600; letter-spacing: .04em; }
+.b3-tabela { width: 100%; table-layout: auto; }
+.b3-tabela th { white-space: nowrap; font-weight: 600; font-size: .75rem; text-transform: uppercase; letter-spacing: .03em; }
+.b3-tabela td { vertical-align: middle; }
+.b3-mono { font-family: var(--b3-mono); font-size: .8rem; }
+.b3-pequeno { font-size: .75rem; color: var(--cui-secondary-color, #6c757d); }
+.b3-expirado { opacity: .85; border-left: 4px solid #6c757d; }
+.b3-card-titulo { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }

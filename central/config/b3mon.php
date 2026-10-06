@@ -30,6 +30,14 @@ return [
         'validity_s' => (int) env('B3MON_BUNDLE_VALIDITY_S', 86400),
     ],
 
+    // O painel (B9). FECHADO por padrão: ele não tem autenticação ainda (F0-05), e só atende o loopback mesmo quando ligado.
+    'panel' => [
+        'enabled' => filter_var(env('B3MON_PANEL_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'refresh_s' => (int) env('B3MON_PANEL_REFRESH_S', 5),
+        // Faixa no topo que diz em que ambiente se está. Vazio = sem faixa.
+        'environment_label' => (string) env('B3MON_ENVIRONMENT_LABEL', ''),
+    ],
+
     // A decisão (B5): quanto histórico o motor lê para avaliar um check. Tem de cobrir várias vezes o frescor (132 s no perfil
     // crítico); o que está fora da janela não entra na avaliação.
     'decide' => [

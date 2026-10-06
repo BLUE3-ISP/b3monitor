@@ -14,7 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->alias(['probe.auth' => \App\Probes\AuthenticateProbe::class]);
+        $middleware->alias([
+            'probe.auth' => \App\Probes\AuthenticateProbe::class,
+            'painel' => \App\Panel\PanelAccess::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
