@@ -9,6 +9,15 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.28 - F0-01 num clone novo: o PostgreSQL do laboratório não cria mais o socket Unix, que estourava o teto de 107 bytes num diretório fundo
+
+A prova da F0-01 (`git clone` num diretório temporário e `make lab-up` do zero) **falhou na primeira tentativa**: `pg_ctl: could not start server`. O log do PostgreSQL dizia que o caminho do socket Unix
+(`<clone>/lab/.pgrun/.s.PGSQL.54329`, 126 bytes) passava do teto de **107 bytes**, e `could not create any Unix-domain sockets` derrubava a subida. No clone principal, num caminho curto, nunca apareceu.
+
+`lab/pg.sh` agora sobe com `unix_socket_directories` vazio: todo cliente do laboratório fala TCP em `127.0.0.1`, então o socket nunca fez falta, e o caminho do clone deixa de importar. O cluster e os dados
+seguem os mesmos; só a próxima subida muda. `lab/.pgrun/` fica no `.gitignore`, sem uso.
+
+
 ## 0.1.27 - B11: o inventário e o quadro de gates vivos em docs/status, o registro da sessão B1 a B10 e o índice da .continue atualizado
 
 `docs/status/INVENTARIO.md` é a parte **viva** do 13 (o 13 original fica intacto, ADR-004): a situação real, o inventário de sondas (as duas de laboratório são **simulação**; as externas e a interna, não provisionadas), a central (só

@@ -63,7 +63,7 @@ primeiras nasceram na preparação, em 29/09/2026, antes de o loop ser armado.
 ## 6. PostgreSQL de dev com autenticação `trust` em loopback (01/10/2026, item A5)
 
 - **Pergunta:** o cluster de desenvolvimento em espaço de usuário (porta 54329) usa senha ou `trust`?
-- **Decisão:** `trust` em 127.0.0.1 e no socket Unix de `lab/.pgrun` (modo 0700). Qualquer processo local
+- **Decisão:** `trust` em 127.0.0.1 (e, até a 0.1.27, no socket Unix de `lab/.pgrun`; depois dela, só TCP). Qualquer processo local
   conecta, o que é aceitável porque o cluster só guarda dados de laboratório identificados como tais e
   nunca uma credencial ou dado de produção. O aviso está no cabeçalho de `lab/pg.sh`.
 - **Descartada:** `scram-sha-256` com senha de dev. Exigiria `PGPASSWORD` ou um `.pgpass`, e a regra do

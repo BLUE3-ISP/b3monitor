@@ -7,8 +7,9 @@
 #
 # Por que assim (ADR-005, D-01; A5 da fila):
 #   - roda como o usuário que chama: sem sudo, sem tocar o PostgreSQL do sistema (porta 5432);
-#   - porta 54329, só em 127.0.0.1, e socket Unix em lab/.pgrun;
-#   - dados em lab/.pgdata e lab/.pgrun, que o ADR-003 deixa fora do git.
+#   - porta 54329, só em 127.0.0.1, e SEM socket Unix (`unix_socket_directories` vazio): o caminho do socket tem teto de 107 bytes, e um clone
+#     num diretório fundo (um temporário, uma pasta de CI) fazia o PostgreSQL recusar subir. Todo cliente daqui fala TCP em 127.0.0.1;
+#   - dados em lab/.pgdata, que o ADR-003 deixa fora do git.
 #
 # ⚠️ AUTENTICAÇÃO `trust` em loopback: QUALQUER processo local conecta como qualquer role. É
 # aceitável porque este cluster guarda só dados de laboratório, identificados como tais, e
@@ -19,7 +20,6 @@ set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BIN=/usr/lib/postgresql/17/bin
 DATA="$HERE/.pgdata"
-RUN="$HERE/.pgrun"
 HOST=127.0.0.1
 PORT=54329
 LOG="$DATA/server.log"
@@ -48,9 +48,8 @@ cmd_up() {
       "$BIN/initdb" -D "$DATA" -U postgres --encoding=UTF8 --locale=C.UTF-8 \
         --auth-local=trust --auth-host=trust >/dev/null
     fi
-    mkdir -p "$RUN" && chmod 700 "$RUN"
     "$BIN/pg_ctl" -D "$DATA" -l "$LOG" -w \
-      -o "-p $PORT -k $RUN -c listen_addresses=$HOST" start >/dev/null
+      -o "-p $PORT -c unix_socket_directories= -c listen_addresses=$HOST" start >/dev/null
     echo "no ar: $HOST:$PORT"
   fi
 
