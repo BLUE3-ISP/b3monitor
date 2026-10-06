@@ -14,6 +14,7 @@ sonda. Sem Docker (ADR-005), tudo em espaço de usuário, só em `127.0.0.1`:
 | PostgreSQL 17 | `54329`, banco **`b3mon_lab`** | O de `lab/pg.sh` (o `b3mon_dev` e o `b3mon_test` não são tocados) |
 | Central (web) | `18000` | `php -S` direto na `public/`, com 4 workers. **Não** `artisan serve`, que muda de porta em silêncio quando a sua está ocupada |
 | Workers | `ingest`, `decide`, `notify` | Os três de `b3mon:work` |
+| Painel | `http://127.0.0.1:18000/painel` | Estados, incidentes, sondas e avisos ([painel.md](painel.md)). Fechado por padrão; o laboratório o liga e o identifica numa faixa |
 | Agendador | `schedule:work` | Reconciliador de lease, partições e a **expiração por tempo** (a cada 10 s) |
 | Alvo `lab` | `18080` (alvo) e `18081` (controle) | `lab/target/`: responde `X-B3mon-Lab: lab` em **toda** resposta e `[lab-target]` em todo log; modos `ok`, `falha` (503) e `lento` |
 | Sondas `lab-a` e `lab-b` | processos `b3mon-probe`, spool e bundle em `lab/.run/probes/<nome>/` | Domínios `lab-dom-a` e `lab-dom-b`. **Uma simulação**: duas sondas na mesma máquina não são diversidade de rede (02 §6) |
@@ -75,4 +76,4 @@ bundle de todas as sondas; agora só sobe quando a linha de fato muda).
 - **O cadastro administrativo** de checks e assignments (F0-05): o laboratório os semeia por `b3mon:lab-seed`, que **recusa rodar** fora de um banco `*_lab` com `B3MON_LAB=1`.
 - **Prova de upstream, de IPv6, de iOS e de diversidade real de rede.** Duas sondas num host e um alvo de mentira não demonstram nada disso; ficam como **bloqueio** (B10), nunca como aceite.
 - **O relógio das sondas é declarado**, não medido: o laboratório o declara como `lab_declared`.
-- **O painel** (B9): o estado, os incidentes e os avisos são lidos por SQL e pelo log.
+- **Autenticação do painel** (F0-05): o painel do laboratório é aberto só em loopback e o laboratório o liga (`B3MON_PANEL_ENABLED=1`); ver [painel.md](painel.md).

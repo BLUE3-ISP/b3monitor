@@ -98,7 +98,9 @@ de documentação e, na fila, o material de definição do produto.
 - **Roda localmente com:** `make pg-up` (PostgreSQL de dev em espaço de usuário,
   porta 54329; `pg-down` e `pg-status` também). `make lab-up` sobe o laboratório
   inteiro (central, workers, alvo `lab` e duas sondas, ~5 s) e `make demo` roda o
-  cenário (~3 min), ver [docs/lab.md](docs/lab.md); `make lab-down` o para. O
+  cenário (~3 min), ver [docs/lab.md](docs/lab.md); `make lab-down` o para. O painel do
+  laboratório fica em `http://127.0.0.1:18000/painel` ([docs/painel.md](docs/painel.md)): fechado
+  por padrão e só loopback, porque ainda não tem login (F0-05). O
   laboratório **não usa o `.env`**. Os passos e as variáveis do `.env` estão em
   [docs/runbook.md](docs/runbook.md), seções 2 e 3.
 - **Testes rodam com:** `make test` — a suíte Pest da `central/`, **só no banco

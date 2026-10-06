@@ -46,6 +46,8 @@ central_env() {
   export DB_CONNECTION=pgsql DB_HOST=127.0.0.1 DB_PORT=54329 DB_DATABASE=b3mon_lab DB_USERNAME=b3mon_lab DB_PASSWORD=
   export CACHE_STORE=file SESSION_DRIVER=array QUEUE_CONNECTION=sync LOG_CHANNEL=single BROADCAST_CONNECTION=null
   export B3MON_LAB=1 B3MON_WORK_IDLE_S=1 B3MON_WORK_RECONCILE_EVERY_S=5 PHP_CLI_SERVER_WORKERS=4
+  # O painel é FECHADO por padrão (sem login até o F0-05; só loopback). O laboratório o liga e se identifica numa faixa.
+  export B3MON_PANEL_ENABLED=1 B3MON_ENVIRONMENT_LABEL='LABORATÓRIO — dados sintéticos'
 }
 
 artisan() { (cd "$ROOT/central" && php artisan "$@"); }
@@ -96,6 +98,8 @@ serve_central() {
   start central bash -c "cd '$ROOT/central' && exec php -S 127.0.0.1:$CENTRAL_PORT -t public"
 }
 
+# Captura antes de procurar: `grep -q` fecha o pipe cedo e o curl sai com 23 sob pipefail (a página é maior que um buffer).
+painel_ok() { local h; h="$(curl -fsS "$CENTRAL/painel")" || return 1; [[ "$h" == *'data-teste="faixa-ambiente"'* ]]; }
 central_ok() { curl -fsS "$CENTRAL/api/v1/health" | grep -q '"status":"ok"'; }
 alvo_ok() { curl -fsS -D - -o /dev/null "http://127.0.0.1:$TARGET_PORT/health" | grep -qi '^x-b3mon-lab: lab'; }
 sonda_viva() { [ "$(sql -c "select count(*) from probe_status where received_at > now() - interval '30 seconds'")" -ge 2 ]; }
@@ -132,6 +136,12 @@ cmd_up() {
   if [ ! -f "$ROOT/central/vendor/autoload.php" ]; then
     say "central sem dependências: composer install (primeira vez, usa a rede)"
     (cd "$ROOT/central" && composer install --no-interaction --no-progress --prefer-dist >"$LOGS/composer.log" 2>&1) || die "composer install falhou (lab/.run/logs/composer.log)"
+  fi
+
+  if [ ! -f "$ROOT/central/public/build/manifest.json" ]; then
+    command -v npm >/dev/null || die "falta o comando 'npm' (o painel precisa compilar o CSS; veja docs/runbook.md §1)"
+    say "painel sem CSS compilado: npm ci e npm run build (primeira vez, usa a rede)"
+    (cd "$ROOT/central" && { [ -d node_modules ] || npm ci --no-audit --no-fund; } && npm run build) >"$LOGS/npm.log" 2>&1 || { tail -20 "$LOGS/npm.log" >&2; die "build do painel falhou (lab/.run/logs/npm.log)"; }
   fi
 
   central_env
@@ -183,6 +193,7 @@ cmd_smoke() {
   local falhas=0
   chk() { local d="$1"; shift; if "$@" >/dev/null 2>&1; then printf '  ok   %s\n' "$d"; else printf '  FALHA %s\n' "$d"; falhas=$((falhas+1)); fi; }
   chk "central responde e alcança o banco" central_ok
+  chk "o painel responde (loopback) e se identifica como laboratório" painel_ok
   chk "alvo responde e se identifica como lab" alvo_ok
   chk "as duas sondas mandaram heartbeat nos últimos 30 s" sonda_viva
   chk "nenhum item de fila parado como dead" sem_dead
