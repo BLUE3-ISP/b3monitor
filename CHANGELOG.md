@@ -9,6 +9,28 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.26 - B10: o aceite da F0-01 no laboratório (make acceptance-lab), com INV, RC e T em cada caso e os bloqueios escritos como bloqueio
+
+`make lab-up && make acceptance-lab` (~4 min) roda os casos da fatia e escreve `evidence/f0-01/ACEITE.md`, **sanitizado** (comando, versão, commit, ambiente e o resultado de cada caso; sem home,
+host, credencial nem log bruto). Sai com código diferente de zero se qualquer caso falhar.
+
+- **Ao vivo, na central de verdade:** a **duplicata** (o mesmo resultado três vezes: `accepted`, `duplicate`, `duplicate` durável; uma linha no ledger; incidentes e avisos intactos), a **resposta
+  perdida depois do commit** (a primeira resposta é descartada; o reenvio é `duplicate` durável) e o **conflito** (mesma chave, conteúdo diferente: `conflict`, original imutável, auditado). Usam um
+  resultado **manual**, que passa pelo mesmo recibo único mas não entra na decisão do estado.
+- **Ao vivo, o cenário:** o `lab/demo.sh` (sucesso, falha → incidente, recuperação, ausência, reenvio), com o resultado de cada fase lido da saída.
+- **Suíte, para o que não se provoca ao vivo:** a reação da **sonda** à resposta perdida, central fora → spool → reenvio e o reinício com SIGKILL (Go), e a ingestão idempotente, a expiração por tempo, o replay e
+  o painel (Pest). **Zero testes ou teste pulado reprova** (09 §6).
+- **Bloqueado, e escrito como bloqueio:** IPv6, upstream real, diversidade real de rede, relógio medido, canal real, iOS, segurança de produção e carga. Nada passa de `verified_lab`.
+- **A "resposta perdida" ao vivo é simulada pelo cliente** (descarta a resposta): afirma o lado da central; a reação da sonda é provada na suíte. Dito em `docs/aceite.md`.
+
+**O aceite achou um defeito de teste:** `TestCrashEReinicio…` **falhava rodando sozinho** (`-run`) e só passava dentro do pacote: o processo filho gerava os ids `…001` e `…002`, o contador do pai começava em 1 quando
+nada o tinha avançado, e o id já persistido colidia. Os ids do filho agora têm espaço próprio. (O aceite roda esse teste isolado, e foi assim que apareceu.) Sonda: 139 testes, `-race` limpo.
+
+**Mutação à mão do próprio aceite: 6 estragos, 6 pegos** (duplicata devolvida como `accepted`, duplicata não durável, conflito devolvido como `duplicate`, conflito sem auditoria, teste Go inexistente, arquivo Pest
+inexistente). Na primeira rodada **dois escaparam por uma corrida**: o `php -S` usa opcache com revalidação a cada 2 s, e o aceite começava antes de o estrago valer na central. Na segunda, **um escapou de verdade**: a auditoria
+do conflito era contada de forma cumulativa, e o banco do laboratório guarda conflitos de execuções anteriores; agora exige o **incremento** de exatamente um. `ACEITE_SEM_DEMO=1` pula o demo para depurar o aceite e **nunca é aceite**
+(não escreve em `evidence/`, e sai com erro mesmo com tudo verde).
+
 ## 0.1.25 - B9: o painel mínimo (Blade, Livewire e CoreUI), que nunca mostra verde antigo e vem fechado, só em loopback
 
 `/painel` mostra os estados atuais, os incidentes, as sondas e os avisos, numa tela só, **legível em 1366×768 sem rolagem horizontal**, que se atualiza a cada 5 s. O painel

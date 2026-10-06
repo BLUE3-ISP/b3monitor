@@ -316,7 +316,9 @@ func filhoQueTravaNoMeioDaExecucao(dir string) {
 	}
 	ex := &ExecutorFalso{}
 	co, _ := Novo(Config{ProbeID: probeID, Politica: mustPolitica(), Spool: sp, Executor: ex, Relogio: rel,
-		NovoID: func() string { return fmt.Sprintf("00000000-0000-4000-8000-%012d", len(ex.Chamadas)+1) }})
+		// Espaço de ids PRÓPRIO do filho (prefixo 1…): o pai usa `proximoID` a partir de 1, e o mesmo id nos dois processos fazia o teste
+		// falhar quando rodava SOZINHO (-run), e só passar dentro do pacote, onde outros testes já tinham avançado o contador.
+		NovoID: func() string { return fmt.Sprintf("11111111-0000-4000-8000-%012d", len(ex.Chamadas)+1) }})
 	co.AplicarBundle(bundleCom(url, 3, epoch.Add(24*time.Hour)))
 
 	rel.Avancar(time.Second)

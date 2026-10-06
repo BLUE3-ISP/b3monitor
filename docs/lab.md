@@ -74,6 +74,6 @@ bundle de todas as sondas; agora só sobe quando a linha de fato muda).
 ## O que não está aqui
 
 - **O cadastro administrativo** de checks e assignments (F0-05): o laboratório os semeia por `b3mon:lab-seed`, que **recusa rodar** fora de um banco `*_lab` com `B3MON_LAB=1`.
-- **Prova de upstream, de IPv6, de iOS e de diversidade real de rede.** Duas sondas num host e um alvo de mentira não demonstram nada disso; ficam como **bloqueio** (B10), nunca como aceite.
+- **Prova de upstream, de IPv6, de iOS e de diversidade real de rede.** Duas sondas num host e um alvo de mentira não demonstram nada disso; ficam como **bloqueio**, nunca como aceite: ver [aceite.md](aceite.md).
 - **O relógio das sondas é declarado**, não medido: o laboratório o declara como `lab_declared`.
 - **Autenticação do painel** (F0-05): o painel do laboratório é aberto só em loopback e o laboratório o liga (`B3MON_PANEL_ENABLED=1`); ver [painel.md](painel.md).

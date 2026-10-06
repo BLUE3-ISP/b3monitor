@@ -42,7 +42,7 @@ help: ## Lista os alvos e diz quais ainda não existem
 	  'pg-up|down|status' 'PostgreSQL de dev isolado, porta 54329      [real]' \
 	  'lab-up|down'     'laboratório numa máquina só                  [real]' \
 	  'demo'            'cenário sintético: sucesso, falha, replay    [real]' \
-	  'acceptance-lab'  'casos de aceite da F0-01 com evidência       [B10]' \
+	  'acceptance-lab'  'aceite da F0-01 no laboratório, com evidência [real]' \
 	  'probe-doctor'    'diagnóstico da sonda                         [F0-02, fora da rodada]' \
 	  'smoke'           'verificação não destrutiva do laboratório    [real]' \
 	  'deploy-central'  'RECUSADO: exige autorização do dono          [nunca automático]' \
@@ -107,8 +107,8 @@ lab-down: ## Para o laboratório (sondas com SIGTERM) e o PostgreSQL; o estado f
 demo: ## Cenário sintético: sucesso, falha → incidente aberto e fechado, ausência, replay (~3 min; exige make lab-up)
 	@bash lab/demo.sh
 
-acceptance-lab: ## Casos de aceite aplicáveis ao laboratório
-	$(call nao-implementado,item B10)
+acceptance-lab: ## Aceite da F0-01 no laboratório: sucesso, falha, recuperação, ausência, replay, duplicata, resposta perdida (~4 min; exige make lab-up)
+	@bash lab/acceptance.sh
 
 probe-doctor: ## Diagnóstico da sonda
 	$(call nao-implementado,F0-02, fora da rodada atual)

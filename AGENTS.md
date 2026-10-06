@@ -98,7 +98,8 @@ de documentação e, na fila, o material de definição do produto.
 - **Roda localmente com:** `make pg-up` (PostgreSQL de dev em espaço de usuário,
   porta 54329; `pg-down` e `pg-status` também). `make lab-up` sobe o laboratório
   inteiro (central, workers, alvo `lab` e duas sondas, ~5 s) e `make demo` roda o
-  cenário (~3 min), ver [docs/lab.md](docs/lab.md); `make lab-down` o para. O painel do
+  cenário (~3 min), ver [docs/lab.md](docs/lab.md); `make lab-down` o para. `make acceptance-lab` (~4 min) roda o aceite da F0-01 e
+  escreve `evidence/f0-01/ACEITE.md` ([docs/aceite.md](docs/aceite.md)). O painel do
   laboratório fica em `http://127.0.0.1:18000/painel` ([docs/painel.md](docs/painel.md)): fechado
   por padrão e só loopback, porque ainda não tem login (F0-05). O
   laboratório **não usa o `.env`**. Os passos e as variáveis do `.env` estão em
