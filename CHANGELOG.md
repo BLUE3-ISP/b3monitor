@@ -9,6 +9,19 @@ improvisada na hora do `git commit`.
 Os corpos são narrativa: o que mudou, por quê e o que foi medido. Este arquivo
 nunca é reescrito.
 
+## 0.1.30 - os blocos de eco são regenerados a partir do repodocs
+
+As regras marcadas de `CLAUDE.md` e `AGENTS.md` são reescritas a partir da
+fonte única em [samirhvbr/repodocs](https://github.com/samirhvbr/repodocs):
+`QUEUE-RULE`, `RELEASES-RULE`, `LANGUAGE-RULE`, `COMMIT-RULE` e `CICD-RULE`.
+Bloco é substituído por inteiro entre os marcadores, cabeçalho incluído — é isso
+que faz uma edição local não sobreviver e não confundir a próxima leitura.
+
+O `QUEUE-RULE` é novo e chega pela primeira vez: a `.continue/` guarda trabalho
+que ainda não existe, e um documento só sai dela quando a coisa que ele descreve
+**existe**. Tamanho, idioma e desalinho não são condição de saída. **Nunca
+esvazie essa pasta como arrumação.**
+
 ## 0.1.29 - F0-01 FECHADA: make lab-up e make demo passam do zero num clone novo do remoto, e a F0-01 vira verified_lab
 
 Com o PostgreSQL do clone principal parado, um `git clone` do remoto num diretório temporário e, de lá, `make lab-up && make demo` sem nada copiado: **DEMO OK em 180 s**, 203 s do clone ao fim. A primeira tentativa
