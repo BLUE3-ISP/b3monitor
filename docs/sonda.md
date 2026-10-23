@@ -86,6 +86,12 @@ O relógio é **declarado pelo operador** no arquivo (a sonda não mede NTP aind
 
 ## Como se prova
 
+`make test-agents` fails when Go package discovery fails and preserves the
+diagnostic. A successful empty package list retains the explicit skip message.
+Run `python3 -m unittest discover -s tests -v` to check this distinction and the
+test/verification control flow with local command doubles. These regression
+checks do not start PostgreSQL or validate the central or pilot.
+
 `go test ./...` em `agents/probe` (139 testes, e `-race` limpo). Os que mais pesam: **um processo de verdade morto com SIGKILL**
 no meio do trabalho, duas vezes (o spool, com um slot `executando`; o coordenador, no meio da execução do slot 1), e o
 reinício conferindo que nada se perdeu, nada duplicou e nenhum sucesso foi fabricado; o **disco cheio** (`PRAGMA
