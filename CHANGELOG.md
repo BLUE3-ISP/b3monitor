@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.31 - Fail agent checks when Go package discovery fails
+
+The test and verification recipes now distinguish a successful empty package
+list from a failed go list command. Toolchain, dependency, or module errors stop
+the check and retain their diagnostic output instead of being reported as an
+empty module. The explicit skip for a genuinely empty module is preserved.
+Isolated Makefile regression tests cover discovery and test failures.
+
 Entradas no formato da mensagem de commit (`versão - descrição curta em
 português`, veja [docs/versioning.md](docs/versioning.md)), mais novas primeiro.
 **Cada cabeçalho `##` é literalmente o subject do commit** — a entrada é escrita

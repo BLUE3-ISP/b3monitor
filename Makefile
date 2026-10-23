@@ -63,7 +63,8 @@ test-agents: ## go test em cada módulo de agents/ (pulado, avisando, se não ho
 	  printf 'PULADO, NÃO APROVADO: agents/ não tem nenhum módulo Go\n' >&2; \
 	else \
 	  for m in $$mods; do d="$$(dirname $$m)"; \
-	    if [ -z "$$(cd "$$d" && go list ./... 2>/dev/null)" ]; then \
+	    packages="$$(cd "$$d" && go list ./...)" || exit 1; \
+	    if [ -z "$$packages" ]; then \
 	      printf 'PULADO, NÃO APROVADO: %s tem go.mod e nenhum pacote\n' "$$d" >&2; \
 	    else \
 	      echo "== go test $$d"; (cd "$$d" && go test ./...) || exit 1; \
@@ -82,7 +83,8 @@ build-probe: ## Compila o binário da sonda em agents/probe/bin (não versionado
 
 verify: test ## test + go vet + composer validate; a validação de schema é o item A8b
 	@for m in $$(ls agents/*/go.mod 2>/dev/null); do d="$$(dirname $$m)"; \
-	  if [ -z "$$(cd "$$d" && go list ./... 2>/dev/null)" ]; then \
+	  packages="$$(cd "$$d" && go list ./...)" || exit 1; \
+	  if [ -z "$$packages" ]; then \
 	    printf 'PULADO: %s tem go.mod e nenhum pacote para o go vet\n' "$$d" >&2; \
 	  else echo "== go vet $$d"; (cd "$$d" && go vet ./...) || exit 1; fi; \
 	done
